@@ -23,16 +23,21 @@ class SSHClient:
             self.channel = self.client.invoke_shell()
             self.channel.setblocking(0)
         except paramiko.AuthenticationException:
-            raise SSHClientException("Authentication failed. Please check your credentials.")
+            # If authentication fails, try to prompt for password
+            if self.password is None:
+                self.password = await asyncio.get_event_loop().run_in_executor(
+                    None, getpass.getpass, f"Enter password for {self.username}@{self.host}: "
+                )
+                # Try to connect again with the new password
+                await self.connect()
+            else:
+                raise SSHClientException("Authentication failed. Please check your credentials.")
         except paramiko.SSHException as e:
             raise SSHClientException(f"SSH connection failed: {str(e)}")
         except Exception as e:
             raise SSHClientException(f"An unexpected error occurred: {str(e)}")
 
     def _connect(self):
-        if self.password is None:
-            self.password = getpass.getpass(f"Enter password for {self.username}@{self.host}: ")
-        
         self.client.connect(
             self.host,
             port=self.port,
