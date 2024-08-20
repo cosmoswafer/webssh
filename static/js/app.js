@@ -15,6 +15,24 @@ document.addEventListener('DOMContentLoaded', () => {
         term.resize(term.cols, term.rows);
     }
 
+    function getQueryParams() {
+        const params = new URLSearchParams(window.location.search);
+        return {
+            host: params.get('host'),
+            port: params.get('port'),
+            username: params.get('username')
+        };
+    }
+
+    function populateFormFromQueryParams() {
+        const params = getQueryParams();
+        if (params.host) document.getElementById('host').value = params.host;
+        if (params.port) document.getElementById('port').value = params.port;
+        if (params.username) document.getElementById('username').value = params.username;
+    }
+
+    populateFormFromQueryParams();
+
     fitTerminal();
     window.addEventListener('resize', fitTerminal);
 
