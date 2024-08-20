@@ -1,6 +1,5 @@
 import asyncio
 import paramiko
-import getpass
 
 class SSHClientException(Exception):
     pass
@@ -23,15 +22,7 @@ class SSHClient:
             self.channel = self.client.invoke_shell()
             self.channel.setblocking(0)
         except paramiko.AuthenticationException:
-            # If authentication fails, try to prompt for password
-            if self.password is None:
-                self.password = await asyncio.get_event_loop().run_in_executor(
-                    None, getpass.getpass, f"Enter password for {self.username}@{self.host}: "
-                )
-                # Try to connect again with the new password
-                await self.connect()
-            else:
-                raise SSHClientException("Authentication failed. Please check your credentials.")
+            raise SSHClientException("Authentication failed. Please check your credentials.")
         except paramiko.SSHException as e:
             raise SSHClientException(f"SSH connection failed: {str(e)}")
         except Exception as e:
@@ -42,7 +33,9 @@ class SSHClient:
             self.host,
             port=self.port,
             username=self.username,
-            password=self.password
+            password=self.password,
+            allow_agent=True,
+            look_for_keys=True
         )
 
     async def read_output(self):
