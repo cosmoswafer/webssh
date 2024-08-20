@@ -14,7 +14,7 @@ async def connect(request):
     host = data['host']
     port = int(data['port'])
     username = data['username']
-    password = data['password']
+    password = data.get('password')  # Use get() to allow for None if password is not provided
 
     ssh_client = SSHClient(host, port, username, password)
     await ssh_client.connect()

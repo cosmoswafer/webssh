@@ -1,8 +1,9 @@
 import asyncio
 import paramiko
+import getpass
 
 class SSHClient:
-    def __init__(self, host, port, username, password):
+    def __init__(self, host, port, username, password=None):
         self.host = host
         self.port = port
         self.username = username
@@ -19,6 +20,9 @@ class SSHClient:
         self.channel.setblocking(0)
 
     def _connect(self):
+        if self.password is None:
+            self.password = getpass.getpass(f"Enter password for {self.username}@{self.host}: ")
+        
         self.client.connect(
             self.host,
             port=self.port,
