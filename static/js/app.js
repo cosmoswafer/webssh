@@ -5,14 +5,20 @@ term.loadAddon(fitAddon);
 let socket;
 
 document.addEventListener('DOMContentLoaded', () => {
-    term.open(document.getElementById('terminal'));
-    fitAddon.fit();
+    const terminalElement = document.getElementById('terminal');
+    const sshForm = document.getElementById('ssh-form');
 
-    window.addEventListener('resize', () => {
+    term.open(terminalElement);
+    
+    function fitTerminal() {
         fitAddon.fit();
-    });
+        term.resize(term.cols, term.rows);
+    }
 
-    document.getElementById('ssh-form').addEventListener('submit', async (e) => {
+    fitTerminal();
+    window.addEventListener('resize', fitTerminal);
+
+    sshForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const host = document.getElementById('host').value;
         const port = document.getElementById('port').value;
@@ -32,6 +38,8 @@ document.addEventListener('DOMContentLoaded', () => {
             
             socket.onopen = () => {
                 term.write('Connected to SSH server\r\n');
+                sshForm.classList.add('hidden');
+                fitTerminal();
             };
 
             socket.onmessage = (event) => {
@@ -40,6 +48,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             socket.onclose = () => {
                 term.write('\r\nDisconnected from SSH server\r\n');
+                sshForm.classList.remove('hidden');
+                fitTerminal();
             };
 
             term.onData((data) => {
