@@ -1,7 +1,7 @@
 import asyncio
 import os
 from aiohttp import web
-from ssh_client import SSHClient
+from ssh_client import SSHClient, SSHClientException
 
 routes = web.RouteTableDef()
 
