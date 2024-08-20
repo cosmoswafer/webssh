@@ -23,7 +23,7 @@ pipx install aider-chat
 
 ```bash
 source .env
-aider --browser
+aider --browser --model openrouter/anthropic/claude-3.5-sonnet
 ```
 
 ### install
