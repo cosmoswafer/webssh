@@ -44,7 +44,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
 
-    const protocol = USE_SECURE_WEBSOCKET ? 'wss://' : 'ws://';
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const protocol = isLocalhost ? 'ws://' : 'wss://';
     socket = new WebSocket(`${protocol}${window.location.host}/connect`);
 
     socket.onopen = () => {
