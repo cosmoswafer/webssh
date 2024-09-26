@@ -21,7 +21,7 @@ async def connect(request):
             if msg.type == web.WSMsgType.TEXT:
                 data = msg.json()
                 print(f"Request data: {data}")
-                
+
                 if not ssh_client:
                     result = await handle_ssh_connection(request, data)
                     if isinstance(result, web.Response):
@@ -33,13 +33,13 @@ async def connect(request):
                         await ws.send_str("Connected to SSH server\r\n")
                 elif ssh_client:
                     await ssh_client.send_input(data)
-                
+
                 if ssh_client:
                     while True:
                         output = await ssh_client.read_output()
                         if not output:
                             break
-                        await ws.send_str(output)
+                        await ws.send_str(output.decode('utf-8'))
             elif msg.type == web.WSMsgType.ERROR:
                 print(f'WebSocket connection closed with exception {ws.exception()}')
     finally:
