@@ -14,6 +14,11 @@ Install all dependencies with `pip`:
 pip install -r requirements.txt
 ```
 
+List of Python modules:
+
+- `aiohttp`
+- `paramiko`
+
 ## Running
 
 Start the server directly:
