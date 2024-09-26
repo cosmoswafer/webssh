@@ -1,4 +1,5 @@
 import os
+import json
 from aiohttp import web
 from ssh_handler import handle_ssh_connection
 
@@ -19,20 +20,27 @@ async def connect(request):
     try:
         async for msg in ws:
             if msg.type == web.WSMsgType.TEXT:
-                data = msg.json()
-                print(f"Request data: {data}")
+                try:
+                    data = msg.json()
+                    print(f"Received JSON data: {data}")
 
-                if not ssh_client:
-                    result = await handle_ssh_connection(request, data)
-                    if isinstance(result, web.Response):
-                        error_message = result.text
-                        await ws.send_str(f"Failed to connect: {error_message}\r\n")
-                        break
-                    else:
-                        ssh_client = result
-                        await ws.send_str("Connected to SSH server\r\n")
-                elif ssh_client:
-                    await ssh_client.send_input(data)
+                    if not ssh_client:
+                        result = await handle_ssh_connection(request, data)
+                        if isinstance(result, web.Response):
+                            error_message = result.text
+                            await ws.send_str(f"Failed to connect: {error_message}\r\n")
+                            break
+                        else:
+                            ssh_client = result
+                            await ws.send_str("Connected to SSH server\r\n")
+                    elif ssh_client:
+                        await ssh_client.send_input(data['input'])
+
+                except json.JSONDecodeError:
+                    # Handle non-JSON messages
+                    print(f"Received non-JSON data: {msg.data}")
+                    if ssh_client:
+                        await ssh_client.send_input(msg.data)
 
                 if ssh_client:
                     while True:
