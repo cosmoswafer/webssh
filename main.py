@@ -8,10 +8,24 @@ routes = web.RouteTableDef()
 async def index(request):
     return web.FileResponse('./index.html')
 
-@routes.post('/connect')
+@routes.get('/connect')
 async def connect(request):
-    data = await request.json()
-    return await handle_ssh_connection(request, data)
+    print("Received a connection request")
+    ws = web.WebSocketResponse()
+    await ws.prepare(request)
+
+    async for msg in ws:
+        if msg.type == web.WSMsgType.TEXT:
+            data = msg.json()
+            print(f"Request data: {data}")
+            response = await handle_ssh_connection(request, data)
+            await ws.send_str(response)
+            print("SSH connection handled")
+        elif msg.type == web.WSMsgType.ERROR:
+            print(f'WebSocket connection closed with exception {ws.exception()}')
+
+    print('WebSocket connection closed')
+    return ws
 
 app = web.Application()
 app.add_routes(routes)
