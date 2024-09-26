@@ -48,4 +48,6 @@ app.router.add_static('/static', './static')
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))
+    print(f"Starting server on port {port}")
+    print("To run the server, use: uv run main.py")
     web.run_app(app, port=port)
