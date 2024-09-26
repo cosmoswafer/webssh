@@ -44,30 +44,35 @@ document.addEventListener("DOMContentLoaded", () => {
     const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
 
-    socket = new WebSocket(`ws://${window.location.host}/connect?host=${host}&port=${port}&username=${username}&password=${password}`);
+    socket = new WebSocket(`ws://${window.location.host}/connect`);
 
-      socket.onopen = () => {
-        term.write("Connected to SSH server\r\n");
-        sshForm.classList.add("hidden");
-        fitTerminal();
-      };
+    socket.onopen = () => {
+      console.log("WebSocket connection established");
+      const connectionData = JSON.stringify({ host, port, username, password });
+      socket.send(connectionData);
+    };
 
-      socket.onmessage = (event) => {
-        term.write(event.data);
-      };
+    socket.onmessage = (event) => {
+      console.log("Received message:", event.data);
+      term.write(event.data);
+    };
 
-      socket.onclose = () => {
-        term.write("\r\nDisconnected from SSH server\r\n");
-        sshForm.classList.remove("hidden");
-        fitTerminal();
-      };
+    socket.onclose = (event) => {
+      console.log("WebSocket connection closed:", event.code, event.reason);
+      term.write("\r\nDisconnected from SSH server\r\n");
+      sshForm.classList.remove("hidden");
+      fitTerminal();
+    };
 
-      term.onData((data) => {
+    socket.onerror = (error) => {
+      console.error("WebSocket error:", error);
+      term.write(`\r\nError: ${error.message}\r\n`);
+    };
+
+    term.onData((data) => {
+      if (socket && socket.readyState === WebSocket.OPEN) {
         socket.send(data);
-      });
-    } else {
-      const errorMessage = await response.text();
-      term.write(`Failed to connect to SSH server: ${errorMessage}\r\n`);
-    }
+      }
+    });
   });
 });
