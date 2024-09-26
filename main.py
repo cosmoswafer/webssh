@@ -1,5 +1,6 @@
 import os
 import json
+import asyncio
 from aiohttp import web
 from ssh_handler import handle_ssh_connection
 
@@ -21,19 +22,17 @@ async def connect(request):
         async for msg in ws:
             if msg.type == web.WSMsgType.TEXT:
                 try:
-                    data = msg.json()
+                    data = json.loads(msg.data)
                     print(f"Received JSON data: {data}")
 
                     if not ssh_client:
-                        result = await handle_ssh_connection(request, data)
-                        if isinstance(result, web.Response):
-                            error_message = result.text
+                        ssh_client = await handle_ssh_connection(ws, data)
+                        if isinstance(ssh_client, web.Response):
+                            error_message = ssh_client.text
                             await ws.send_str(f"Failed to connect: {error_message}\r\n")
                             break
-                        else:
-                            ssh_client = result
-                            await ws.send_str("Connected to SSH server\r\n")
-                    elif ssh_client:
+                        await ws.send_str("Connected to SSH server\r\n")
+                    else:
                         await ssh_client.send_input(data['input'])
 
                 except json.JSONDecodeError:
@@ -42,12 +41,6 @@ async def connect(request):
                     if ssh_client:
                         await ssh_client.send_input(msg.data)
 
-                if ssh_client:
-                    while True:
-                        output = await ssh_client.read_output()
-                        if not output:
-                            break
-                        await ws.send_str(output.decode('utf-8'))
             elif msg.type == web.WSMsgType.ERROR:
                 print(f'WebSocket connection closed with exception {ws.exception()}')
     finally:
