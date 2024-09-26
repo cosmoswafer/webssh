@@ -71,6 +71,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     term.onData((data) => {
       if (socket && socket.readyState === WebSocket.OPEN) {
+        // Check if the data is a single character control sequence
+        if (data.length === 1 && data.charCodeAt(0) < 32) {
+          // Don't send control characters, as they're already handled by the terminal
+          return;
+        }
         socket.send(data);
       }
     });
