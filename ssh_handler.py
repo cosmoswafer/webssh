@@ -2,8 +2,20 @@ import asyncio
 from ssh_client import SSHClient, SSHClientException
 from aiohttp import web
 
+from ssh_client import SSHClient, SSHClientException
+
 async def handle_ssh_connection(request, data):
     host = data['host']
+    port = int(data['port'])
+    username = data['username']
+    password = data['password']
+
+    try:
+        ssh_client = SSHClient(host, port, username, password)
+        await ssh_client.connect()
+        return ssh_client
+    except SSHClientException as e:
+        return web.Response(text=str(e), status=400)
     port = int(data['port'])
     username = data['username']
     password = data.get('password')  # Use get() to allow for None if password is not provided
