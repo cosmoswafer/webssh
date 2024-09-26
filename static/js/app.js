@@ -44,7 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
 
-    socket = new WebSocket(`ws://${window.location.host}/connect`);
+    socket = new WebSocket(`wss://${window.location.host}/connect`);
 
     socket.onopen = () => {
       console.log("WebSocket connection established");
