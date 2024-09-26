@@ -71,12 +71,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     term.onData((data) => {
       if (socket && socket.readyState === WebSocket.OPEN) {
-        // Check if the data is a single character control sequence
-        if (data.length === 1 && data.charCodeAt(0) < 32) {
-          // Don't send control characters, as they're already handled by the terminal
+        // Handle special cases for Enter and Ctrl+C
+        if (data === '\r') {
+          socket.send('\n');
+        } else if (data === '\x03') {
+          socket.send(data);
+        } else if (data.length === 1 && data.charCodeAt(0) < 32) {
+          // Don't send other control characters, as they're already handled by the terminal
           return;
+        } else {
+          socket.send(data);
         }
-        socket.send(data);
       }
     });
   });
