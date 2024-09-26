@@ -16,7 +16,11 @@ async def handle_ssh_connection(ws, data):
             while True:
                 output = await ssh_client.read_output()
                 if output:
-                    await ws.send_str(output.decode('utf-8'))
+                    try:
+                        await ws.send_str(output.decode('utf-8', errors='replace'))
+                    except Exception as e:
+                        print(f"Error sending output: {e}")
+                        break
                 else:
                     await asyncio.sleep(0.1)
 

@@ -39,7 +39,10 @@ async def connect(request):
                     # Handle non-JSON messages
                     print(f"Received non-JSON data: {msg.data}")
                     if ssh_client:
-                        await ssh_client.send_input(msg.data)
+                        try:
+                            await ssh_client.send_input(msg.data)
+                        except Exception as e:
+                            print(f"Error sending input: {e}")
 
             elif msg.type == web.WSMsgType.ERROR:
                 print(f'WebSocket connection closed with exception {ws.exception()}')

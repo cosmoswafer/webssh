@@ -52,3 +52,8 @@ class SSHClient:
 
     async def close(self):
         self.client.close()
+async def close(self):
+    if self.chan:
+        self.chan.close()
+    if self.client:
+        self.client.close()
