@@ -52,6 +52,8 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log("WebSocket connection established");
       const connectionData = JSON.stringify({ host, port, username, password });
       socket.send(connectionData);
+      document.getElementById("ssh-form").classList.remove("visible");
+      document.getElementById("ssh-form").classList.add("hidden");
     };
 
     socket.onmessage = (event) => {
@@ -62,7 +64,8 @@ document.addEventListener("DOMContentLoaded", () => {
     socket.onclose = (event) => {
       console.log("WebSocket connection closed:", event.code, event.reason);
       term.write("\r\nDisconnected from SSH server\r\n");
-      sshForm.classList.remove("hidden");
+      document.getElementById("ssh-form").classList.remove("hidden");
+      document.getElementById("ssh-form").classList.add("visible");
       fitTerminal();
     };
 
