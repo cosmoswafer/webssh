@@ -44,7 +44,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
 
-    socket = new WebSocket(`ws://${window.location.host}/connect`);
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const protocol = isLocalhost ? 'ws://' : 'wss://';
+    socket = new WebSocket(`${protocol}${window.location.host}/connect`);
 
     socket.onopen = () => {
       console.log("WebSocket connection established");
