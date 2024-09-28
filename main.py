@@ -33,7 +33,13 @@ async def connect(request):
                             break
                         await ws.send_str("Connected to SSH server\r\n")
                     else:
-                        await ssh_client.send_input(data['input'])
+                        if 'type' in data and data['type'] == 'resize':
+                            cols, rows = data['cols'], data['rows']
+                            await ssh_client.handle_resize(cols, rows)
+                        else:
+                            print(
+                                f"Received JSON data but don't know how to handle it: {data}"
+                            )
 
                 except json.JSONDecodeError:
                     # Handle non-JSON messages

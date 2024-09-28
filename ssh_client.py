@@ -1,4 +1,5 @@
 import asyncio
+import json
 import paramiko
 
 class SSHClientException(Exception):
@@ -16,9 +17,7 @@ class SSHClient:
 
     async def connect(self):
         try:
-            await asyncio.get_event_loop().run_in_executor(
-                None, self._connect
-            )
+            await asyncio.get_event_loop().run_in_executor(None, self._connect)
             self.channel = self.client.invoke_shell()
             self.channel.setblocking(0)
         except paramiko.AuthenticationException:
@@ -50,10 +49,13 @@ class SSHClient:
             None, self.channel.send, data
         )
 
+    async def handle_resize(self, cols, rows):
+        await asyncio.get_event_loop().run_in_executor(
+            None, self.channel.resize_pty, cols, rows
+        )
+
     async def close(self):
-        self.client.close()
-async def close(self):
-    if self.chan:
-        self.chan.close()
-    if self.client:
-        self.client.close()
+        if self.channel:
+            self.channel.close()
+        if self.client:
+            self.client.close()

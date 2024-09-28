@@ -13,6 +13,14 @@ document.addEventListener("DOMContentLoaded", () => {
 	function fitTerminal() {
 		fitAddon.fit();
 		term.resize(term.cols, term.rows);
+		if (socket && socket.readyState === WebSocket.OPEN) {
+			const resizeMessage = JSON.stringify({
+				type: 'resize',
+				cols: term.cols,
+				rows: term.rows
+			});
+			socket.send(resizeMessage);
+		}
 	}
 
 	function getQueryParams() {
@@ -87,5 +95,23 @@ document.addEventListener("DOMContentLoaded", () => {
 				}
 			}
 		});
+	});
+
+	// Assuming 'term' is your xterm.js instance and 'socket' is your WebSocket
+	term.onResize((size) => {
+		const cols = size.cols;
+		const rows = size.rows;
+
+		// Debug messages
+		console.log(`Terminal resized to ${cols} cols and ${rows} rows`);
+
+		// Send the new size to the server
+		const resizeMessage = JSON.stringify({
+			type: 'resize',
+			cols: cols,
+			rows: rows
+		});
+		console.log(`Sending resize message: ${resizeMessage}`);
+		socket.send(resizeMessage);
 	});
 });
