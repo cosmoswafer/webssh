@@ -1,50 +1,54 @@
 import asyncio
 from ssh_client import SSHClient, SSHClientException
+import sys
+import argparse
 
-async def test_ssh_client(host, port, username, password):
+async def handle_ssh_connection(host, port, username, password):
     try:
-        # Create an SSHClient instance
-        ssh_client = SSHClient(host, port, username, password)
-
-        # Connect to the SSH server
-        print("Connecting to SSH server...")
+        ssh_client= SSHClient(host, port, username, password)
         await ssh_client.connect()
-        print("Connected successfully!")
 
-        # Send a command
-        command = "ls -la"
-        print(f"Sending command: {command}")
-        await ssh_client.send_input(command + "\n")
+        async def send_output():
+            while True:
+                output = await ssh_client.read_output()
+                if output:
+                    print(output.decode('utf-8', errors='replace'))
+                else:
+                    await asyncio.sleep(0.1)
 
-        # Read the output
-        print("Reading output:")
-        while True:
-            output = await ssh_client.read_output()
-            if output:
-                print(output.decode('utf-8'), end='')
-            else:
-                await asyncio.sleep(0.1)
-                break
+        asyncio.create_task(send_output())
 
-        # Close the connection
-        print("\nClosing connection...")
-        await ssh_client.close()
-        print("Connection closed.")
-
+        return ssh_client
     except SSHClientException as e:
-        print(f"SSH Client Exception: {e}")
-    except Exception as e:
-        print(f"Unexpected error: {e}")
+        print(e)
+        return False
 
-if __name__ == "__main__":
-    import argparse
+async def read_user_input(ssh_client):
+    try:
+        while True:
+            user_input = input('Enter command: ')
+            if user_input.lower() == 'exit':
+                break
+            else:
+                await ssh_client.send_input(user_input + "\n")
+            await asyncio.sleep(1)  # Keep the connection open
+    finally:
+        await ssh_client.close()
 
-    parser = argparse.ArgumentParser(description="Test SSH Client")
-    parser.add_argument("host", help="SSH server hostname")
+async def main():
+    parser = argparse.ArgumentParser(description="SSH Client")
+    parser.add_argument("host", type=str, help="SSH server hostname")
     parser.add_argument("port", type=int, help="SSH server port")
-    parser.add_argument("username", help="SSH username")
-    parser.add_argument("password", help="SSH password")
-
+    parser.add_argument("username", type=str, help="SSH username")
+    password = input("Enter SSH password: ")
     args = parser.parse_args()
 
-    asyncio.run(test_ssh_client(args.host, args.port, args.username, args.password))
+    ssh_client = await handle_ssh_connection(args.host, args.port, args.username, password)
+    if ssh_client:
+        await ssh_client.send_input("date\n")
+        await asyncio.sleep(1)
+        input_task = asyncio.create_task(read_user_input(ssh_client))
+        await input_task
+
+if __name__ == "__main__": 
+    asyncio.run(main())
