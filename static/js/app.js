@@ -56,6 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
 			socket.send(connectionData);
 			document.getElementById("ssh-form").classList.remove("visible");
 			document.getElementById("ssh-form").classList.add("hidden");
+      fitTerminal();
 		};
 
 		socket.onmessage = (event) => {
