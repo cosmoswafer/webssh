@@ -16,57 +16,45 @@
             padding: 0;
             height: 100%;
             overflow: hidden;
-        }
-
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        #ssh-form {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(255, 255, 255, 0.7);
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            z-index: 1000;
+            position: relative;
         }
 
         #terminal {
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
+            z-index: 1;
+        }
+
+        #ssh-form {
+            z-index: 10;
         }
     </style>
 </head>
 
-<body>
-    <form id="ssh-form" class="box visible p-4">
+<body class="is-flex is-justify-content-center is-align-items-center is-fullheight">
+    <div id="terminal"></div>
+    <form id="ssh-form" class="box p-4 has-background-white-bis has-shadow">
         <div class="field is-grouped mb-4">
             <div class="control is-expanded">
-            <label class="label" for="host">Host</label>
-            <input class="input" type="text" id="host" placeholder="Host" required>
+                <label class="label" for="host">Host</label>
+                <input class="input" type="text" id="host" placeholder="Host" required>
             </div>
             <div class="control is-expanded">
-            <label class="label" for="port">Port</label>
-            <input class="input" type="number" id="port" placeholder="Port" value="22" required>
+                <label class="label" for="port">Port</label>
+                <input class="input" type="number" id="port" placeholder="Port" value="22" required>
             </div>
         </div>
         <div class="field is-grouped mb-4">
             <div class="control is-expanded">
-            <label class="label" for="username">Username</label>
-            <input class="input" type="text" id="username" placeholder="Username" required>
+                <label class="label" for="username">Username</label>
+                <input class="input" type="text" id="username" placeholder="Username" required>
             </div>
             <div class="control is-expanded">
-            <label class="label" for="password">Password</label>
-            <input class="input" type="password" id="password" placeholder="Password">
+                <label class="label" for="password">Password</label>
+                <input class="input" type="password" id="password" placeholder="Password">
             </div>
         </div>
         <div class="field">
@@ -75,7 +63,6 @@
             </div>
         </div>
     </form>
-    <div id="terminal"></div>
     <script src="/static/js/app.js"></script>
 </body>
 
