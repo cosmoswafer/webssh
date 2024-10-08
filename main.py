@@ -33,7 +33,7 @@ async def connect(request):
                             break
                         await ws.send_str("Connected to SSH server\r\n")
                     else:
-                        if 'type' in data and data['type'] == 'resize':
+                        if isinstance(data, dict) and 'type' in data and data['type'] == 'resize':
                             cols, rows = data['cols'], data['rows']
                             await ssh_client.handle_resize(cols, rows)
                         else:
