@@ -35,11 +35,11 @@ async def connect(request):
                     else:
                         if isinstance(data, dict) and 'type' in data and data['type'] == 'resize':
                             cols, rows = data['cols'], data['rows']
+                            print(f"Received resize event: {cols}x{rows}")
                             await ssh_client.handle_resize(cols, rows)
                         else:
-                            print(
-                                f"Received JSON data but don't know how to handle it: {data}"
-                            )
+                            print(f"Received JSON data with unknown type, sending the raw data to SSH server: {data}")
+                            await ssh_client.send_input(msg.data)
 
                 except json.JSONDecodeError:
                     # Handle non-JSON messages
