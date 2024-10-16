@@ -51,6 +51,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const port = document.getElementById("port").value;
     const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
+    const privateKeyFile = document.getElementById("private-key").files[0];
+
+    let privateKey = null;
+    if (privateKeyFile) {
+      privateKey = await privateKeyFile.text();
+    }
 
     const isLocalhost =
       window.location.hostname === "localhost" ||
@@ -60,7 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     socket.onopen = () => {
       console.log("WebSocket connection established");
-      const connectionData = JSON.stringify({ host, port, username, password });
+      const connectionData = JSON.stringify({ host, port, username, password, privateKey });
       socket.send(connectionData);
       document.getElementById("ssh-form").classList.add("is-hidden");
       fitTerminal();
