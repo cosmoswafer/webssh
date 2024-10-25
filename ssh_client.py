@@ -20,6 +20,7 @@ class SSHClient:
             await asyncio.get_event_loop().run_in_executor(None, self._connect)
             self.channel = self.client.invoke_shell()
             self.channel.setblocking(0)
+            self.channel.set_environment_variable('TERM', 'xterm-256color')
         except paramiko.AuthenticationException:
             raise SSHClientException("Authentication failed. Please check your credentials.")
         except paramiko.SSHException as e:
