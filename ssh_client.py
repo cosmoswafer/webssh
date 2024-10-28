@@ -1,6 +1,7 @@
 import asyncio
 import json
 import paramiko
+import io
 
 class SSHClientException(Exception):
     pass
