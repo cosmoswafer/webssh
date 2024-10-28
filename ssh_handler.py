@@ -7,9 +7,10 @@ async def handle_ssh_connection(ws, data):
     port = int(data['port'])
     username = data['username']
     password = data.get('password')
+    private_key = data.get('privateKey')
 
     try:
-        ssh_client = SSHClient(host, port, username, password)
+        ssh_client = SSHClient(host, port, username, password, private_key)
         await ssh_client.connect()
 
         async def send_output():

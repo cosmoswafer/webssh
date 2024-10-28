@@ -52,9 +52,32 @@
                 <label class="label" for="username">Username</label>
                 <input class="input" type="text" id="username" placeholder="Username" required>
             </div>
+        </div>
+        <div class="field is-grouped mb-4">
+            <div class="control is-expanded">
+                <label class="label">Authentication Method</label>
+                <div class="control">
+                    <label class="radio">
+                        <input type="radio" name="auth-method" value="password" checked>
+                        Password
+                    </label>
+                    <label class="radio">
+                        <input type="radio" name="auth-method" value="private-key">
+                        Private Key
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="field is-grouped mb-4" id="password-field">
             <div class="control is-expanded">
                 <label class="label" for="password">Password</label>
                 <input class="input" type="password" id="password" placeholder="Password">
+            </div>
+        </div>
+        <div class="field is-grouped mb-4" id="private-key-field" style="display: none;">
+            <div class="control is-expanded">
+                <label class="label" for="private-key">Private Key</label>
+                <input class="input" type="file" id="private-key" placeholder="Private Key">
             </div>
         </div>
         <div class="field">
