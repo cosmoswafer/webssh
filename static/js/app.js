@@ -1,4 +1,6 @@
-const term = new Terminal();
+const term = new Terminal({
+  termName: 'xterm-256color',
+});
 const fitAddon = new FitAddon.FitAddon();
 term.loadAddon(fitAddon);
 

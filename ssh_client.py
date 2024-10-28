@@ -20,7 +20,7 @@ class SSHClient:
     async def connect(self):
         try:
             await asyncio.get_event_loop().run_in_executor(None, self._connect)
-            self.channel = self.client.invoke_shell()
+            self.channel = self.client.invoke_shell(term='xterm-256color')
             self.channel.setblocking(0)
         except paramiko.AuthenticationException:
             raise SSHClientException("Authentication failed. Please check your credentials.")
