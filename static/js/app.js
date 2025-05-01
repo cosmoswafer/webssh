@@ -1,5 +1,7 @@
+const PRIVATE_KEY_STORAGE_KEY = "webssh_private_key";
+
 const term = new Terminal({
-  termName: 'xterm-256color',
+  termName: "xterm-256color",
 });
 const fitAddon = new FitAddon.FitAddon();
 term.loadAddon(fitAddon);
@@ -47,7 +49,9 @@ document.addEventListener("DOMContentLoaded", () => {
   fitTerminal();
   window.addEventListener("resize", fitTerminal);
 
-  const authMethodRadios = document.querySelectorAll('input[name="auth-method"]');
+  const authMethodRadios = document.querySelectorAll(
+    'input[name="auth-method"]',
+  );
   const passwordField = document.getElementById("password-field");
   const privateKeyField = document.getElementById("private-key-field");
 
@@ -59,8 +63,16 @@ document.addEventListener("DOMContentLoaded", () => {
       } else {
         passwordField.style.display = "none";
         privateKeyField.style.display = "block";
+        const savedKey = localStorage.getItem(PRIVATE_KEY_STORAGE_KEY);
+        if (savedKey) {
+          document.getElementById("private-key").value = savedKey;
+        }
       }
     });
+  });
+
+  document.getElementById("private-key").addEventListener("input", (e) => {
+    localStorage.setItem(PRIVATE_KEY_STORAGE_KEY, e.target.value);
   });
 
   sshForm.addEventListener("submit", async (e) => {
@@ -69,13 +81,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const port = document.getElementById("port").value;
     const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
-    const privateKeyFile = document.getElementById("private-key").files[0];
-    const authMethod = document.querySelector('input[name="auth-method"]:checked').value;
-
-    let privateKey = null;
-    if (privateKeyFile) {
-      privateKey = await privateKeyFile.text();
-    }
+    const privateKey = document.getElementById("private-key").value;
+    const authMethod = document.querySelector(
+      'input[name="auth-method"]:checked',
+    ).value;
 
     const isLocalhost =
       window.location.hostname === "localhost" ||
@@ -85,7 +94,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     socket.onopen = () => {
       console.log("WebSocket connection established");
-      const connectionData = JSON.stringify({ host, port, username, password, privateKey, authMethod });
+      const connectionData = JSON.stringify({
+        host,
+        port,
+        username,
+        password,
+        privateKey,
+        authMethod,
+      });
       socket.send(connectionData);
       document.getElementById("ssh-form").classList.add("is-hidden");
       fitTerminal();

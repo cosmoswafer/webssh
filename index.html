@@ -1,92 +1,144 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Web SSH Client</title>
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css"
+        />
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css"
+        />
+        <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.10.0/lib/addon-fit.min.js"></script>
+        <style>
+            body,
+            html {
+                margin: 0;
+                padding: 0;
+                height: 100%;
+                overflow: hidden;
+                position: relative;
+            }
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web SSH Client</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.10.0/lib/addon-fit.min.js"></script>
-    <style>
-        body,
-        html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            overflow: hidden;
-            position: relative;
-        }
+            #terminal {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 1;
+            }
 
-        #terminal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-        }
+            #ssh-form {
+                z-index: 10;
+            }
+        </style>
+    </head>
 
-        #ssh-form {
-            z-index: 10;
-        }
-    </style>
-</head>
-
-<body class="is-flex is-justify-content-center is-align-items-center is-fullheight">
-    <div id="terminal"></div>
-    <form id="ssh-form" class="box p-4 has-background-white-bis has-shadow">
-        <div class="field is-grouped mb-4">
-            <div class="control is-expanded">
-                <label class="label" for="host">Host</label>
-                <input class="input" type="text" id="host" placeholder="Host" required>
-            </div>
-            <div class="control is-expanded">
-                <label class="label" for="port">Port</label>
-                <input class="input" type="number" id="port" placeholder="Port" value="22" required>
-            </div>
-        </div>
-        <div class="field is-grouped mb-4">
-            <div class="control is-expanded">
-                <label class="label" for="username">Username</label>
-                <input class="input" type="text" id="username" placeholder="Username" required>
-            </div>
-        </div>
-        <div class="field is-grouped mb-4">
-            <div class="control is-expanded">
-                <label class="label">Authentication Method</label>
-                <div class="control">
-                    <label class="radio">
-                        <input type="radio" name="auth-method" value="password" checked>
-                        Password
-                    </label>
-                    <label class="radio">
-                        <input type="radio" name="auth-method" value="private-key">
-                        Private Key
-                    </label>
+    <body
+        class="is-flex is-justify-content-center is-align-items-center is-fullheight"
+    >
+        <div id="terminal"></div>
+        <form id="ssh-form" class="box p-4 has-background-white-bis has-shadow">
+            <div class="field is-grouped mb-4">
+                <div class="control is-expanded">
+                    <label class="label" for="host">Host</label>
+                    <input
+                        class="input"
+                        type="text"
+                        id="host"
+                        placeholder="Host"
+                        required
+                    />
+                </div>
+                <div class="control is-expanded">
+                    <label class="label" for="port">Port</label>
+                    <input
+                        class="input"
+                        type="number"
+                        id="port"
+                        placeholder="Port"
+                        value="22"
+                        required
+                    />
                 </div>
             </div>
-        </div>
-        <div class="field is-grouped mb-4" id="password-field">
-            <div class="control is-expanded">
-                <label class="label" for="password">Password</label>
-                <input class="input" type="password" id="password" placeholder="Password">
+            <div class="field is-grouped mb-4">
+                <div class="control is-expanded">
+                    <label class="label" for="username">Username</label>
+                    <input
+                        class="input"
+                        type="text"
+                        id="username"
+                        placeholder="Username"
+                        required
+                    />
+                </div>
             </div>
-        </div>
-        <div class="field is-grouped mb-4" id="private-key-field" style="display: none;">
-            <div class="control is-expanded">
-                <label class="label" for="private-key">Private Key</label>
-                <input class="input" type="file" id="private-key" placeholder="Private Key">
+            <div class="field is-grouped mb-4">
+                <div class="control is-expanded">
+                    <label class="label">Authentication Method</label>
+                    <div class="control">
+                        <label class="radio">
+                            <input
+                                type="radio"
+                                name="auth-method"
+                                value="password"
+                                checked
+                            />
+                            Password
+                        </label>
+                        <label class="radio">
+                            <input
+                                type="radio"
+                                name="auth-method"
+                                value="private-key"
+                            />
+                            Private Key
+                        </label>
+                    </div>
+                </div>
             </div>
-        </div>
-        <div class="field">
-            <div class="control">
-                <button class="button is-link is-pulled-right" type="submit">Connect</button>
+            <div class="field is-grouped mb-4" id="password-field">
+                <div class="control is-expanded">
+                    <label class="label" for="password">Password</label>
+                    <input
+                        class="input"
+                        type="password"
+                        id="password"
+                        placeholder="Password"
+                    />
+                </div>
             </div>
-        </div>
-    </form>
-    <script src="/static/js/app.js"></script>
-</body>
-
+            <div
+                class="field is-grouped mb-4"
+                id="private-key-field"
+                style="display: none"
+            >
+                <div class="control is-expanded">
+                    <label class="label" for="private-key">Private Key</label>
+                    <textarea
+                        class="textarea"
+                        id="private-key"
+                        rows="8"
+                    ></textarea>
+                </div>
+            </div>
+            <div class="field">
+                <div class="control">
+                    <button
+                        class="button is-link is-pulled-right"
+                        type="submit"
+                    >
+                        Connect
+                    </button>
+                </div>
+            </div>
+        </form>
+        <script src="/static/js/app.js"></script>
+    </body>
 </html>
