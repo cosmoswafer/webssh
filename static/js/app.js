@@ -1,3 +1,5 @@
+const PRIVATE_KEY_STORAGE_KEY = "webssh_private_key";
+
 const term = new Terminal({
   termName: "xterm-256color",
 });
@@ -63,9 +65,17 @@ document.addEventListener("DOMContentLoaded", () => {
       } else {
         passwordField.style.display = "none";
         privateKeyField.style.display = "block";
+        const savedKey = localStorage.getItem(PRIVATE_KEY_STORAGE_KEY);
+        if (savedKey) {
+          document.getElementById("private-key").value = savedKey;
+        }
       }
     });
   }
+
+  document.getElementById("private-key").addEventListener("input", (e) => {
+    localStorage.setItem(PRIVATE_KEY_STORAGE_KEY, e.target.value);
+  });
 
   sshForm.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -73,15 +83,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const port = document.getElementById("port").value;
     const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
-    const privateKeyFile = document.getElementById("private-key").files[0];
+    const privateKey = document.getElementById("private-key").value;
     const authMethod = document.querySelector(
       'input[name="auth-method"]:checked',
     ).value;
-
-    let privateKey = null;
-    if (privateKeyFile) {
-      privateKey = await privateKeyFile.text();
-    }
 
     const isLocalhost =
       window.location.hostname === "localhost" ||
