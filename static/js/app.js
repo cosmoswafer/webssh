@@ -55,11 +55,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const passwordField = document.getElementById("password-field");
   const privateKeyField = document.getElementById("private-key-field");
 
-  authMethodRadios.forEach((radio) => {
+  for (const radio of authMethodRadios) {
     radio.addEventListener("change", () => {
       if (radio.value === "password") {
         passwordField.style.display = "block";
         privateKeyField.style.display = "none";
+        document.getElementById("password").value = "";
+        document.getElementById("password").focus();
       } else {
         passwordField.style.display = "none";
         privateKeyField.style.display = "block";
@@ -69,6 +71,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
     });
+  }
+
+  document.getElementById("private-key").addEventListener("input", (e) => {
+    localStorage.setItem(PRIVATE_KEY_STORAGE_KEY, e.target.value);
   });
 
   document.getElementById("private-key").addEventListener("input", (e) => {
