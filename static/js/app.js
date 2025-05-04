@@ -46,6 +46,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   populateFormFromQueryParams();
 
+  // Set focus on the password input field
+  document.getElementById("password").focus();
+
   fitTerminal();
   window.addEventListener("resize", fitTerminal);
 
