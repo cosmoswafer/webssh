@@ -29,15 +29,31 @@ python main.py
 
 ## Terminal Themes
 
-The terminal uses the Solarized color scheme by default (dark variant). You can switch between themes using the browser console:
+The terminal features Solarized color theme support with automatic detection of your browser's dark/light mode preference. 
 
+### Theme Selection Priority
+1. **Query Parameter**: `?theme=light` or `?theme=dark` (overrides browser setting)
+2. **Browser Setting**: Automatically detects `prefers-color-scheme` media query
+3. **Fallback**: Solarized dark theme
+
+### Usage Examples
+
+**URL with theme parameter:**
+```
+http://localhost:8080?host=server&username=user&theme=light
+http://localhost:8080?host=server&username=user&theme=dark
+```
+
+**Manual theme switching via browser console:**
 ```javascript
-// Switch to solarized light theme
+// Switch to solarized dark theme
 switchSolarizedTheme(true)
 
-// Switch to solarized dark theme  
+// Switch to solarized light theme  
 switchSolarizedTheme(false)
 ```
+
+The terminal will automatically use your browser's preferred color scheme if no theme parameter is specified.
 
 ## Configuration
 
@@ -51,6 +67,7 @@ URL parameters:
 - `host` - SSH server hostname (required)
 - `port` - SSH port (default: 22)
 - `username` - SSH username (required)
+- `theme` - Terminal color theme: `light` or `dark` (optional, auto-detects browser preference)
 
 ## Security Notes
 
