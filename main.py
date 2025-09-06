@@ -8,22 +8,27 @@ routes = web.RouteTableDef()
 
 def sanitize_data_for_logging(data):
     """Sanitize sensitive data for safe logging by masking passwords and private keys."""
-    if isinstance(data, dict):
-        sanitized = data.copy()
-        # Mask sensitive fields
-        if 'password' in sanitized and sanitized['password']:
-            sanitized['password'] = '[REDACTED]'
-        if 'privateKey' in sanitized and sanitized['privateKey']:
-            sanitized['privateKey'] = '[REDACTED]'
-        return sanitized
-    elif isinstance(data, str):
-        try:
-            parsed = json.loads(data)
-            if isinstance(parsed, dict):
-                return json.dumps(sanitize_data_for_logging(parsed))
-        except json.JSONDecodeError:
-            pass
-    return data
+    try:
+        if isinstance(data, dict):
+            sanitized = data.copy()
+            # Mask sensitive fields
+            if 'password' in sanitized and sanitized['password']:
+                sanitized['password'] = '[REDACTED]'
+            if 'privateKey' in sanitized and sanitized['privateKey']:
+                sanitized['privateKey'] = '[REDACTED]'
+            return sanitized
+        elif isinstance(data, str):
+            try:
+                parsed = json.loads(data)
+                if isinstance(parsed, dict):
+                    return json.dumps(sanitize_data_for_logging(parsed))
+            except json.JSONDecodeError:
+                # If JSON parsing fails, do not return the original data
+                return "[UNSANITIZED DATA REDACTED]"
+        # If data is not dict or str, return a safe string
+        return "[UNSANITIZED DATA REDACTED]"
+    except Exception:
+        return "[UNSANITIZED DATA REDACTED]"
 
 @routes.get('/')
 async def index(request):
