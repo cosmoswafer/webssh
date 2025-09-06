@@ -1,0 +1,26 @@
+# Official Solarized Color Palette Reference Values
+# Source: https://ethanschoonover.com/solarized/
+# Verified: 2024-09-06
+
+# Base Colors (Monotones)
+base03 = #002b36  # Dark background
+base02 = #073642  # Dark background highlights  
+base01 = #586e75  # Dark comments/secondary content
+base00 = #657b83  # Light body text
+base0  = #839496  # Dark body text
+base1  = #93a1a1  # Light comments/secondary content
+base2  = #eee8d5  # Light background highlights
+base3  = #fdf6e3  # Light background
+
+# Accent Colors
+yellow  = #b58900
+orange  = #cb4b16
+red     = #dc322f
+magenta = #d33682
+violet  = #6c71c4
+blue    = #268bd2
+cyan    = #2aa198
+green   = #859900
+
+# Validation Status: ✅ PASSED
+# All values in static/js/app.js match these official specifications
