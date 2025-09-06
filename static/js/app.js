@@ -114,6 +114,8 @@ document.addEventListener("DOMContentLoaded", () => {
       socket.send(connectionData);
       document.getElementById("ssh-form").classList.add("is-hidden");
       fitTerminal();
+      // Focus on the terminal after form is hidden
+      term.focus();
     };
 
     socket.onmessage = (event) => {
