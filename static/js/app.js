@@ -68,7 +68,7 @@ function switchSolarizedTheme(useLightTheme = false) {
 
 // Make theme switching available globally for easy access
 window.switchSolarizedTheme = switchSolarizedTheme;
-const fitAddon = new FitAddon.FitAddon();
+const fitAddon = new FitAddon();
 term.loadAddon(fitAddon);
 
 let socket;
