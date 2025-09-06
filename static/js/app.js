@@ -1,7 +1,33 @@
 const PRIVATE_KEY_STORAGE_KEY = "webssh_private_key";
 
+// Solarized Dark theme colors
+const solarizedDarkTheme = {
+  background: '#002b36',     // base03
+  foreground: '#839496',     // base0
+  cursor: '#93a1a1',         // base1
+  cursorAccent: '#002b36',   // base03
+  selection: '#073642',      // base02
+  black: '#073642',          // base02
+  red: '#dc322f',            // red
+  green: '#859900',          // green
+  yellow: '#b58900',         // yellow
+  blue: '#268bd2',           // blue
+  magenta: '#d33682',        // magenta
+  cyan: '#2aa198',           // cyan
+  white: '#eee8d5',          // base2
+  brightBlack: '#586e75',    // base01
+  brightRed: '#cb4b16',      // orange
+  brightGreen: '#93a1a1',    // base1
+  brightYellow: '#657b83',   // base00
+  brightBlue: '#839496',     // base0
+  brightMagenta: '#6c71c4',  // violet
+  brightCyan: '#93a1a1',     // base1
+  brightWhite: '#fdf6e3'     // base3
+};
+
 const term = new Terminal({
   termName: "xterm-256color",
+  theme: solarizedDarkTheme,
 });
 const fitAddon = new FitAddon.FitAddon();
 term.loadAddon(fitAddon);
