@@ -6,6 +6,30 @@ from ssh_handler import handle_ssh_connection
 
 routes = web.RouteTableDef()
 
+def sanitize_data_for_logging(data):
+    """Sanitize sensitive data for safe logging by masking passwords and private keys."""
+    try:
+        if isinstance(data, dict):
+            sanitized = data.copy()
+            # Mask sensitive fields
+            if 'password' in sanitized and sanitized['password']:
+                sanitized['password'] = '[REDACTED]'
+            if 'privateKey' in sanitized and sanitized['privateKey']:
+                sanitized['privateKey'] = '[REDACTED]'
+            return sanitized
+        elif isinstance(data, str):
+            try:
+                parsed = json.loads(data)
+                if isinstance(parsed, dict):
+                    return json.dumps(sanitize_data_for_logging(parsed))
+            except json.JSONDecodeError:
+                # If JSON parsing fails, do not return the original data
+                return "[UNSANITIZED DATA REDACTED]"
+        # If data is not dict or str, return a safe string
+        return "[UNSANITIZED DATA REDACTED]"
+    except Exception:
+        return "[UNSANITIZED DATA REDACTED]"
+
 @routes.get('/')
 async def index(request):
     return web.FileResponse('./index.html')
@@ -23,7 +47,7 @@ async def connect(request):
             if msg.type == web.WSMsgType.TEXT:
                 try:
                     data = json.loads(msg.data)
-                    print(f"Received JSON data: {data}")
+                    print(f"Received JSON data: {sanitize_data_for_logging(data)}")
 
                     if not ssh_client:
                         ssh_client = await handle_ssh_connection(ws, data)
@@ -38,12 +62,12 @@ async def connect(request):
                             print(f"Received resize event: {cols}x{rows}")
                             await ssh_client.handle_resize(cols, rows)
                         else:
-                            print(f"Received JSON data with unknown type, sending the raw data to SSH server: {data}")
+                            print(f"Received JSON data with unknown type, sending the raw data to SSH server: {sanitize_data_for_logging(data)}")
                             await ssh_client.send_input(msg.data)
 
                 except json.JSONDecodeError:
                     # Handle non-JSON messages
-                    print(f"Received non-JSON data: {msg.data}")
+                    print(f"Received non-JSON data: {sanitize_data_for_logging(msg.data)}")
                     if ssh_client:
                         try:
                             await ssh_client.send_input(msg.data)
