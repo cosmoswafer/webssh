@@ -61,6 +61,7 @@ function getThemeFromQuery() {
   const theme = params.get('theme');
   if (theme === 'light') return false;
   if (theme === 'dark') return true;
+  if (theme === 'auto') return 'auto';
   return null; // No theme specified in query
 }
 
@@ -68,12 +69,15 @@ function getThemeFromQuery() {
 function getInitialTheme() {
   // First check query parameter
   const queryTheme = getThemeFromQuery();
-  if (queryTheme !== null) {
-    return queryTheme;
+  if (queryTheme === true) return true;  // dark theme
+  if (queryTheme === false) return false; // light theme
+  if (queryTheme === 'auto') {
+    // Only use browser detection when explicitly set to auto
+    return detectBrowserTheme();
   }
   
-  // Fall back to browser preference (dark theme if prefers dark, light theme otherwise)
-  return detectBrowserTheme();
+  // Default to dark theme when no theme parameter is specified
+  return true;
 }
 
 // Initialize terminal with appropriate theme
