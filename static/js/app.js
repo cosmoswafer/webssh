@@ -50,25 +50,52 @@ const solarizedLightTheme = {
   brightWhite: '#fdf6e3'     // base3
 };
 
-// Use solarized dark by default
+// Function to detect browser theme preference
+function detectBrowserTheme() {
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+
+// Function to get theme from query parameter
+function getThemeFromQuery() {
+  const params = new URLSearchParams(window.location.search);
+  const theme = params.get('theme');
+  if (theme === 'light') return false;
+  if (theme === 'dark') return true;
+  return null; // No theme specified in query
+}
+
+// Function to determine initial theme
+function getInitialTheme() {
+  // First check query parameter
+  const queryTheme = getThemeFromQuery();
+  if (queryTheme !== null) {
+    return queryTheme;
+  }
+  
+  // Fall back to browser preference (dark theme if prefers dark, light theme otherwise)
+  return detectBrowserTheme();
+}
+
+// Initialize terminal with appropriate theme
+const initialTheme = getInitialTheme() ? solarizedDarkTheme : solarizedLightTheme;
 const term = new Terminal({
   termName: "xterm-256color",
-  theme: solarizedDarkTheme,
+  theme: initialTheme,
 });
 
-// Function to switch between solarized themes (can be called from browser console)
+// Function to switch between solarized themes
 // Usage: 
-//   switchSolarizedTheme(true)  - Switch to solarized light theme
-//   switchSolarizedTheme(false) - Switch to solarized dark theme
-function switchSolarizedTheme(useLightTheme = false) {
-  const theme = useLightTheme ? solarizedLightTheme : solarizedDarkTheme;
+//   switchSolarizedTheme(true)  - Switch to solarized dark theme
+//   switchSolarizedTheme(false) - Switch to solarized light theme
+function switchSolarizedTheme(useDarkTheme = true) {
+  const theme = useDarkTheme ? solarizedDarkTheme : solarizedLightTheme;
   term.options.theme = theme;
-  console.log(`Switched to solarized ${useLightTheme ? 'light' : 'dark'} theme`);
+  console.log(`Switched to solarized ${useDarkTheme ? 'dark' : 'light'} theme`);
 }
 
 // Make theme switching available globally for easy access
 window.switchSolarizedTheme = switchSolarizedTheme;
-const fitAddon = new FitAddon();
+const fitAddon = new FitAddon.FitAddon();
 term.loadAddon(fitAddon);
 
 let socket;
@@ -98,6 +125,7 @@ document.addEventListener("DOMContentLoaded", () => {
       host: params.get("host"),
       port: params.get("port"),
       username: params.get("username"),
+      theme: params.get("theme"),
     };
   }
 
