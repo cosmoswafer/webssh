@@ -53,9 +53,13 @@ async def main():
 def test_private_key_loading():
     """Test that private key loading works for different key types."""
     import os
-    
-    # Test with our generated test keys if available
-    test_keys_dir = "/tmp/test_keys"
+    import tempfile
+
+    # Allow test keys directory to be set via environment variable for portability
+    test_keys_dir = os.environ.get("TEST_KEYS_DIR")
+    if not test_keys_dir:
+        print("⚠ TEST_KEYS_DIR environment variable not set. Skipping key loading tests.")
+        return
     key_files = {
         "RSA": f"{test_keys_dir}/test_rsa",
         "Ed25519": f"{test_keys_dir}/test_ed25519", 
