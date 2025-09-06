@@ -31,7 +31,7 @@ class SSHClient:
 
     def _connect(self):
         if self.private_key:
-            pkey = paramiko.RSAKey.from_private_key(io.StringIO(self.private_key))
+            pkey = self._load_private_key(self.private_key)
             self.client.connect(
                 self.host,
                 port=self.port,
@@ -49,6 +49,27 @@ class SSHClient:
                 allow_agent=True,
                 look_for_keys=True
             )
+
+    def _load_private_key(self, private_key_str):
+        """Load a private key from string, supporting multiple key types."""
+        key_io = io.StringIO(private_key_str)
+        
+        # Try different key types in order of common usage
+        key_types = [
+            paramiko.RSAKey,
+            paramiko.Ed25519Key,
+            paramiko.ECDSAKey
+        ]
+        
+        for key_type in key_types:
+            try:
+                key_io.seek(0)  # Reset stream position
+                return key_type.from_private_key(key_io)
+            except (paramiko.SSHException, paramiko.PasswordRequiredException):
+                continue
+        
+        # If all key types failed, raise a descriptive error
+        raise SSHClientException("Unsupported private key format. Please ensure you're using a valid SSH private key (RSA, Ed25519, or ECDSA).")
 
     async def read_output(self):
         if self.channel.recv_ready():

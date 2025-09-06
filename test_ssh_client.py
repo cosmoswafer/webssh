@@ -50,5 +50,50 @@ async def main():
         input_task = asyncio.create_task(read_user_input(ssh_client))
         await input_task
 
+def test_private_key_loading():
+    """Test that private key loading works for different key types."""
+    import os
+    import tempfile
+
+    # Allow test keys directory to be set via environment variable for portability
+    test_keys_dir = os.environ.get("TEST_KEYS_DIR")
+    if not test_keys_dir:
+        print("⚠ TEST_KEYS_DIR environment variable not set. Skipping key loading tests.")
+        return
+    key_files = {
+        "RSA": f"{test_keys_dir}/test_rsa",
+        "Ed25519": f"{test_keys_dir}/test_ed25519", 
+        "ECDSA": f"{test_keys_dir}/test_ecdsa"
+    }
+    
+    for key_type, key_file in key_files.items():
+        if os.path.exists(key_file):
+            with open(key_file, 'r') as f:
+                private_key = f.read()
+            
+            client = SSHClient("test.example.com", 22, "testuser", private_key=private_key)
+            try:
+                pkey = client._load_private_key(private_key)
+                print(f"✓ {key_type} key loading test passed: {type(pkey).__name__}")
+            except Exception as e:
+                print(f"✗ {key_type} key loading test failed: {e}")
+        else:
+            print(f"⚠ {key_type} test key not found at {key_file}")
+    
+    # Test invalid key handling
+    invalid_key = "invalid key content"
+    client = SSHClient("test.example.com", 22, "testuser", private_key=invalid_key)
+    try:
+        client._load_private_key(invalid_key)
+        print("✗ Invalid key test failed: should have raised exception")
+    except SSHClientException as e:
+        print(f"✓ Invalid key test passed: {e}")
+    except Exception as e:
+        print(f"✗ Invalid key test failed with unexpected error: {e}")
+
 if __name__ == "__main__": 
-    asyncio.run(main())
+    import sys
+    if len(sys.argv) > 1 and sys.argv[1] == "--test-keys":
+        test_private_key_loading()
+    else:
+        asyncio.run(main())
