@@ -65,7 +65,7 @@ class SSHClient:
             try:
                 key_io.seek(0)  # Reset stream position
                 return key_type.from_private_key(key_io)
-            except Exception:
+            except (paramiko.SSHException, paramiko.PasswordRequiredException):
                 continue
         
         # If all key types failed, raise a descriptive error
