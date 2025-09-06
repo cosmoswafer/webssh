@@ -25,10 +25,49 @@ const solarizedDarkTheme = {
   brightWhite: '#fdf6e3'     // base3
 };
 
+// Solarized Light theme colors
+const solarizedLightTheme = {
+  background: '#fdf6e3',     // base3
+  foreground: '#657b83',     // base00
+  cursor: '#586e75',         // base01
+  cursorAccent: '#fdf6e3',   // base3
+  selection: '#eee8d5',      // base2
+  black: '#073642',          // base02
+  red: '#dc322f',            // red
+  green: '#859900',          // green
+  yellow: '#b58900',         // yellow
+  blue: '#268bd2',           // blue
+  magenta: '#d33682',        // magenta
+  cyan: '#2aa198',           // cyan
+  white: '#eee8d5',          // base2
+  brightBlack: '#586e75',    // base01
+  brightRed: '#cb4b16',      // orange
+  brightGreen: '#93a1a1',    // base1
+  brightYellow: '#657b83',   // base00
+  brightBlue: '#839496',     // base0
+  brightMagenta: '#6c71c4',  // violet
+  brightCyan: '#93a1a1',     // base1
+  brightWhite: '#fdf6e3'     // base3
+};
+
+// Use solarized dark by default
 const term = new Terminal({
   termName: "xterm-256color",
   theme: solarizedDarkTheme,
 });
+
+// Function to switch between solarized themes (can be called from browser console)
+// Usage: 
+//   switchSolarizedTheme(true)  - Switch to solarized light theme
+//   switchSolarizedTheme(false) - Switch to solarized dark theme
+function switchSolarizedTheme(useLightTheme = false) {
+  const theme = useLightTheme ? solarizedLightTheme : solarizedDarkTheme;
+  term.options.theme = theme;
+  console.log(`Switched to solarized ${useLightTheme ? 'light' : 'dark'} theme`);
+}
+
+// Make theme switching available globally for easy access
+window.switchSolarizedTheme = switchSolarizedTheme;
 const fitAddon = new FitAddon.FitAddon();
 term.loadAddon(fitAddon);
 

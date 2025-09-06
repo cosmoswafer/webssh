@@ -5,6 +5,7 @@ A secure web interface for SSH connections using Python and WebSockets.
 ## Features
 
 - Web-based terminal interface (Xterm.js integration)
+- Solarized color theme support (dark and light variants)
 - Secure SSH credential handling
 - Real-time terminal synchronization
 - Automatic resize propagation
@@ -25,6 +26,18 @@ python main.py
 
 3. Connect via:
 `http://localhost:8080?host=your_server&port=22&username=your_user`
+
+## Terminal Themes
+
+The terminal uses the Solarized color scheme by default (dark variant). You can switch between themes using the browser console:
+
+```javascript
+// Switch to solarized light theme
+switchSolarizedTheme(true)
+
+// Switch to solarized dark theme  
+switchSolarizedTheme(false)
+```
 
 ## Configuration
 
