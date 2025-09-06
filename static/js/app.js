@@ -1,8 +1,104 @@
 const PRIVATE_KEY_STORAGE_KEY = "webssh_private_key";
 
+// Solarized Dark theme colors
+const solarizedDarkTheme = {
+  background: '#002b36',     // base03
+  foreground: '#839496',     // base0
+  cursor: '#93a1a1',         // base1
+  cursorAccent: '#002b36',   // base03
+  selection: '#073642',      // base02
+  black: '#073642',          // base02
+  red: '#dc322f',            // red
+  green: '#859900',          // green
+  yellow: '#b58900',         // yellow
+  blue: '#268bd2',           // blue
+  magenta: '#d33682',        // magenta
+  cyan: '#2aa198',           // cyan
+  white: '#eee8d5',          // base2
+  brightBlack: '#586e75',    // base01
+  brightRed: '#cb4b16',      // orange
+  brightGreen: '#93a1a1',    // base1
+  brightYellow: '#657b83',   // base00
+  brightBlue: '#839496',     // base0
+  brightMagenta: '#6c71c4',  // violet
+  brightCyan: '#93a1a1',     // base1
+  brightWhite: '#fdf6e3'     // base3
+};
+
+// Solarized Light theme colors
+const solarizedLightTheme = {
+  background: '#fdf6e3',     // base3
+  foreground: '#657b83',     // base00
+  cursor: '#586e75',         // base01
+  cursorAccent: '#fdf6e3',   // base3
+  selection: '#eee8d5',      // base2
+  black: '#073642',          // base02
+  red: '#dc322f',            // red
+  green: '#859900',          // green
+  yellow: '#b58900',         // yellow
+  blue: '#268bd2',           // blue
+  magenta: '#d33682',        // magenta
+  cyan: '#2aa198',           // cyan
+  white: '#eee8d5',          // base2
+  brightBlack: '#586e75',    // base01
+  brightRed: '#cb4b16',      // orange
+  brightGreen: '#93a1a1',    // base1
+  brightYellow: '#657b83',   // base00
+  brightBlue: '#839496',     // base0
+  brightMagenta: '#6c71c4',  // violet
+  brightCyan: '#93a1a1',     // base1
+  brightWhite: '#fdf6e3'     // base3
+};
+
+// Function to detect browser theme preference
+function detectBrowserTheme() {
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+
+// Function to get theme from query parameter
+function getThemeFromQuery() {
+  const params = new URLSearchParams(window.location.search);
+  const theme = params.get('theme');
+  if (theme === 'light') return false;
+  if (theme === 'dark') return true;
+  if (theme === 'auto') return 'auto';
+  return null; // No theme specified in query
+}
+
+// Function to determine initial theme
+function getInitialTheme() {
+  // First check query parameter
+  const queryTheme = getThemeFromQuery();
+  if (queryTheme === true) return true;  // dark theme
+  if (queryTheme === false) return false; // light theme
+  if (queryTheme === 'auto') {
+    // Only use browser detection when explicitly set to auto
+    return detectBrowserTheme();
+  }
+  
+  // Default to dark theme when no theme parameter is specified
+  return true;
+}
+
+// Initialize terminal with appropriate theme
+const initialTheme = getInitialTheme() ? solarizedDarkTheme : solarizedLightTheme;
 const term = new Terminal({
   termName: "xterm-256color",
+  theme: initialTheme,
 });
+
+// Function to switch between solarized themes
+// Usage: 
+//   switchSolarizedTheme(true)  - Switch to solarized dark theme
+//   switchSolarizedTheme(false) - Switch to solarized light theme
+function switchSolarizedTheme(useDarkTheme = true) {
+  const theme = useDarkTheme ? solarizedDarkTheme : solarizedLightTheme;
+  term.options.theme = theme;
+  console.log(`Switched to solarized ${useDarkTheme ? 'dark' : 'light'} theme`);
+}
+
+// Make theme switching available globally for easy access
+window.switchSolarizedTheme = switchSolarizedTheme;
 const fitAddon = new FitAddon.FitAddon();
 term.loadAddon(fitAddon);
 
@@ -33,6 +129,7 @@ document.addEventListener("DOMContentLoaded", () => {
       host: params.get("host"),
       port: params.get("port"),
       username: params.get("username"),
+      theme: params.get("theme"),
     };
   }
 
