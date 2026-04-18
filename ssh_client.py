@@ -2,6 +2,7 @@ import asyncio
 import json
 import paramiko
 import io
+from cryptography.exceptions import UnsupportedAlgorithm
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
@@ -94,7 +95,7 @@ class SSHClient:
                     encryption_algorithm=serialization.NoEncryption(),
                 ).decode("utf-8")
                 return paramiko.Ed25519Key.from_private_key(io.StringIO(openssh_key))
-        except (TypeError, ValueError) as error:
+        except (TypeError, ValueError, UnsupportedAlgorithm) as error:
             fallback_error = error
         
         # If all key types failed, raise a descriptive error
