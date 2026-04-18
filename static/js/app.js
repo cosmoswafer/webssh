@@ -162,6 +162,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function setAuthMethod(authMethod) {
     const usePassword = authMethod === "password";
+    passwordRadio.checked = usePassword;
+    privateKeyRadio.checked = !usePassword;
     passwordField.style.display = usePassword ? "block" : "none";
     privateKeyField.style.display = usePassword ? "none" : "block";
 
@@ -179,14 +181,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const savedKey = localStorage.getItem(PRIVATE_KEY_STORAGE_KEY);
-  if (savedKey) {
-    privateKeyRadio.checked = true;
-    passwordRadio.checked = false;
-    privateKeyInput.value = savedKey;
-    setAuthMethod("private-key");
-  } else {
-    setAuthMethod("password");
-  }
+  setAuthMethod(savedKey ? "private-key" : "password");
 
   for (const radio of authMethodRadios) {
     radio.addEventListener("change", () => {
