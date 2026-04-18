@@ -2,6 +2,8 @@ import asyncio
 import json
 import paramiko
 import io
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 class SSHClientException(Exception):
     pass
@@ -53,6 +55,7 @@ class SSHClient:
     def _load_private_key(self, private_key_str):
         """Load a private key from string, supporting multiple key types."""
         key_io = io.StringIO(private_key_str)
+        passphrase = self.password if self.password else None
         
         # Try different key types in order of common usage
         key_types = [
@@ -64,9 +67,25 @@ class SSHClient:
         for key_type in key_types:
             try:
                 key_io.seek(0)  # Reset stream position
-                return key_type.from_private_key(key_io)
+                return key_type.from_private_key(key_io, password=passphrase)
             except (paramiko.SSHException, paramiko.PasswordRequiredException):
                 continue
+
+        # Fallback for PKCS8/PEM Ed25519 keys by converting to OpenSSH format.
+        try:
+            loaded_key = serialization.load_pem_private_key(
+                private_key_str.encode("utf-8"),
+                password=passphrase.encode("utf-8") if passphrase else None,
+            )
+            if isinstance(loaded_key, Ed25519PrivateKey):
+                openssh_key = loaded_key.private_bytes(
+                    encoding=serialization.Encoding.PEM,
+                    format=serialization.PrivateFormat.OpenSSH,
+                    encryption_algorithm=serialization.NoEncryption(),
+                ).decode("utf-8")
+                return paramiko.Ed25519Key.from_private_key(io.StringIO(openssh_key))
+        except (TypeError, ValueError):
+            pass
         
         # If all key types failed, raise a descriptive error
         raise SSHClientException("Unsupported private key format. Please ensure you're using a valid SSH private key (RSA, Ed25519, or ECDSA).")
