@@ -55,7 +55,7 @@ class SSHClient:
     def _load_private_key(self, private_key_str):
         """Load a private key from string, supporting multiple key types."""
         key_io = io.StringIO(private_key_str)
-        passphrase = self.password or None
+        passphrase = self.password
         if isinstance(passphrase, bytes):
             passphrase_for_paramiko = passphrase.decode("utf-8")
             passphrase_for_cryptography = passphrase
@@ -100,7 +100,9 @@ class SSHClient:
         # If all key types failed, raise a descriptive error
         message = "Unsupported private key format. Please ensure you're using a valid SSH private key (RSA, Ed25519, or ECDSA)."
         if fallback_error:
-            raise SSHClientException(f"{message} PEM/PKCS8 Ed25519 parsing also failed.") from fallback_error
+            raise SSHClientException(
+                f"{message} PEM/PKCS8 Ed25519 parsing also failed: {fallback_error}"
+            ) from fallback_error
         raise SSHClientException(message)
 
     async def read_output(self):
