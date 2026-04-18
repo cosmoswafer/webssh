@@ -143,41 +143,58 @@ document.addEventListener("DOMContentLoaded", () => {
 
   populateFormFromQueryParams();
 
-  // Set focus on the password input field
-  document.getElementById("password").focus();
-
   fitTerminal();
   window.addEventListener("resize", fitTerminal);
 
   const authMethodRadios = document.querySelectorAll(
     'input[name="auth-method"]',
   );
+  const passwordRadio = document.querySelector(
+    'input[name="auth-method"][value="password"]',
+  );
+  const privateKeyRadio = document.querySelector(
+    'input[name="auth-method"][value="private-key"]',
+  );
   const passwordField = document.getElementById("password-field");
   const privateKeyField = document.getElementById("private-key-field");
+  const passwordInput = document.getElementById("password");
+  const privateKeyInput = document.getElementById("private-key");
+
+  function setAuthMethod(authMethod) {
+    const usePassword = authMethod === "password";
+    passwordField.style.display = usePassword ? "block" : "none";
+    privateKeyField.style.display = usePassword ? "none" : "block";
+
+    if (usePassword) {
+      passwordInput.value = "";
+      passwordInput.focus();
+      return;
+    }
+
+    const savedKey = localStorage.getItem(PRIVATE_KEY_STORAGE_KEY);
+    if (savedKey) {
+      privateKeyInput.value = savedKey;
+    }
+    privateKeyInput.focus();
+  }
+
+  const savedKey = localStorage.getItem(PRIVATE_KEY_STORAGE_KEY);
+  if (savedKey) {
+    privateKeyRadio.checked = true;
+    passwordRadio.checked = false;
+    privateKeyInput.value = savedKey;
+    setAuthMethod("private-key");
+  } else {
+    setAuthMethod("password");
+  }
 
   for (const radio of authMethodRadios) {
     radio.addEventListener("change", () => {
-      if (radio.value === "password") {
-        passwordField.style.display = "block";
-        privateKeyField.style.display = "none";
-        document.getElementById("password").value = "";
-        document.getElementById("password").focus();
-      } else {
-        passwordField.style.display = "none";
-        privateKeyField.style.display = "block";
-        const savedKey = localStorage.getItem(PRIVATE_KEY_STORAGE_KEY);
-        if (savedKey) {
-          document.getElementById("private-key").value = savedKey;
-        }
-      }
+      setAuthMethod(radio.value);
     });
   }
 
-  document.getElementById("private-key").addEventListener("input", (e) => {
-    localStorage.setItem(PRIVATE_KEY_STORAGE_KEY, e.target.value);
-  });
-
-  document.getElementById("private-key").addEventListener("input", (e) => {
+  privateKeyInput.addEventListener("input", (e) => {
     localStorage.setItem(PRIVATE_KEY_STORAGE_KEY, e.target.value);
   });
 
