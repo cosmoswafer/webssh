@@ -163,7 +163,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const connectBtn = document.querySelector('button[type="submit"]');
 
   function showPrivateKeyEditor() {
-    privateKeyInput.style.display = "";
+    privateKeyInput.style.display = "block";
     editKeyBtn.style.display = "none";
     privateKeyInput.focus();
   }
@@ -190,7 +190,7 @@ document.addEventListener("DOMContentLoaded", () => {
       editKeyBtn.style.display = "inline";
       connectBtn.focus();
     } else {
-      privateKeyInput.style.display = "";
+      privateKeyInput.style.display = "block";
       editKeyBtn.style.display = "none";
       privateKeyInput.focus();
     }

@@ -33,6 +33,15 @@
             #ssh-form {
                 z-index: 10;
             }
+
+            .edit-key-button {
+                background: none;
+                border: none;
+                cursor: pointer;
+                font-size: 1.2rem;
+                padding: 0 0.25rem;
+                line-height: 1;
+            }
         </style>
     </head>
 
@@ -122,8 +131,9 @@
                         <button
                             type="button"
                             id="edit-key-btn"
+                            class="edit-key-button"
                             title="Edit saved key"
-                            style="display: none; background: none; border: none; cursor: pointer; font-size: 1.2rem; padding: 0 0.25rem; line-height: 1;"
+                            style="display: none;"
                         >✏️</button>
                     </div>
                     <textarea
