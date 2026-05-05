@@ -33,6 +33,15 @@
             #ssh-form {
                 z-index: 10;
             }
+
+            .edit-key-button {
+                background: none;
+                border: none;
+                cursor: pointer;
+                font-size: 1.2rem;
+                padding: 0 0.25rem;
+                line-height: 1;
+            }
         </style>
     </head>
 
@@ -117,7 +126,16 @@
                 style="display: none"
             >
                 <div class="control is-expanded">
-                    <label class="label" for="private-key">Private Key</label>
+                    <div class="is-flex is-align-items-center mb-1" style="gap: 0.5rem;">
+                        <label class="label mb-0" for="private-key">Private Key</label>
+                        <button
+                            type="button"
+                            id="edit-key-btn"
+                            class="edit-key-button"
+                            title="Edit saved key"
+                            style="display: none;"
+                        >✏️</button>
+                    </div>
                     <textarea
                         class="textarea"
                         id="private-key"

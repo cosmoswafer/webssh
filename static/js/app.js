@@ -159,6 +159,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const privateKeyField = document.getElementById("private-key-field");
   const passwordInput = document.getElementById("password");
   const privateKeyInput = document.getElementById("private-key");
+  const editKeyBtn = document.getElementById("edit-key-btn");
+  const connectBtn = document.querySelector('button[type="submit"]');
+
+  function showPrivateKeyEditor() {
+    privateKeyInput.style.display = "block";
+    editKeyBtn.style.display = "none";
+    privateKeyInput.focus();
+  }
+
+  editKeyBtn.addEventListener("click", showPrivateKeyEditor);
 
   function setAuthMethod(authMethod) {
     const usePassword = authMethod === "password";
@@ -176,8 +186,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const savedKey = localStorage.getItem(PRIVATE_KEY_STORAGE_KEY);
     if (savedKey) {
       privateKeyInput.value = savedKey;
+      privateKeyInput.style.display = "none";
+      editKeyBtn.style.display = "inline";
+      connectBtn.focus();
+    } else {
+      privateKeyInput.style.display = "block";
+      editKeyBtn.style.display = "none";
+      privateKeyInput.focus();
     }
-    privateKeyInput.focus();
   }
 
   const savedKey = localStorage.getItem(PRIVATE_KEY_STORAGE_KEY);
