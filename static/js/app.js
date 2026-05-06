@@ -162,7 +162,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const privateKeyInput = document.getElementById("private-key");
   const editKeyBtn = document.getElementById("edit-key-btn");
   const connectBtn = document.querySelector('button[type="submit"]');
-  const enableScreenCheckbox = document.getElementById("enable-screen");
+  const enableScreenCheckbox = document.getElementById("enable-screen-session");
 
   function showPrivateKeyEditor() {
     privateKeyInput.style.display = "block";
