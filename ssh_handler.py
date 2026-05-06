@@ -8,10 +8,14 @@ async def handle_ssh_connection(ws, data):
     username = data['username']
     password = data.get('password')
     private_key = data.get('privateKey')
+    enable_screen_session = data.get('enableScreenSession', False)
 
     try:
         ssh_client = SSHClient(host, port, username, password, private_key)
         await ssh_client.connect()
+
+        if enable_screen_session:
+            await ssh_client.start_screen_session()
 
         async def send_output():
             while True:
