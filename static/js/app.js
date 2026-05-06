@@ -276,12 +276,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   term.onData((data) => {
     if (socket && socket.readyState === WebSocket.OPEN) {
-      // Handle special cases for Enter and Ctrl+C
-      if (data === "\r") {
-        socket.send("\n");
-      } else {
-        socket.send(data);
-      }
+      socket.send(data);
     }
   });
 
