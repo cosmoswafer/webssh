@@ -119,7 +119,7 @@ class SSHClient:
         )
 
     async def start_screen_session(self):
-        await self.send_input("screen -r || screen\n")
+        await self.send_input("screen -R -S SCREENAUTO\n")
 
     async def handle_resize(self, cols, rows):
         await asyncio.get_event_loop().run_in_executor(
