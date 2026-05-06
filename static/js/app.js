@@ -1,5 +1,5 @@
 const PRIVATE_KEY_STORAGE_KEY = "webssh_private_key";
-const TMUX_SESSION_STORAGE_KEY = "webssh_enable_tmux_session";
+const SCREEN_SESSION_STORAGE_KEY = "webssh_enable_screen_session";
 
 // Solarized Dark theme colors
 const solarizedDarkTheme = {
@@ -162,7 +162,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const privateKeyInput = document.getElementById("private-key");
   const editKeyBtn = document.getElementById("edit-key-btn");
   const connectBtn = document.querySelector('button[type="submit"]');
-  const enableTmuxCheckbox = document.getElementById("enable-tmux-session");
+  const enableScreenCheckbox = document.getElementById("enable-screen-session");
 
   function showPrivateKeyEditor() {
     privateKeyInput.style.display = "block";
@@ -201,10 +201,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const savedKey = localStorage.getItem(PRIVATE_KEY_STORAGE_KEY);
   setAuthMethod(savedKey ? "private-key" : "password");
 
-  const savedTmuxSessionPreference = localStorage.getItem(
-    TMUX_SESSION_STORAGE_KEY,
+  const savedScreenSessionPreference = localStorage.getItem(
+    SCREEN_SESSION_STORAGE_KEY,
   );
-  enableTmuxCheckbox.checked = savedTmuxSessionPreference === "true";
+  enableScreenCheckbox.checked = savedScreenSessionPreference === "true";
 
   for (const radio of authMethodRadios) {
     radio.addEventListener("change", () => {
@@ -216,8 +216,8 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.setItem(PRIVATE_KEY_STORAGE_KEY, e.target.value);
   });
 
-  enableTmuxCheckbox.addEventListener("change", (e) => {
-    localStorage.setItem(TMUX_SESSION_STORAGE_KEY, e.target.checked);
+  enableScreenCheckbox.addEventListener("change", (e) => {
+    localStorage.setItem(SCREEN_SESSION_STORAGE_KEY, e.target.checked);
   });
 
   sshForm.addEventListener("submit", async (e) => {
@@ -230,7 +230,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const authMethod = document.querySelector(
       'input[name="auth-method"]:checked',
     ).value;
-    const enableTmuxSession = enableTmuxCheckbox.checked;
+    const enableScreenSession = enableScreenCheckbox.checked;
 
     const isLocalhost =
       window.location.hostname === "localhost" ||
@@ -247,7 +247,7 @@ document.addEventListener("DOMContentLoaded", () => {
         password,
         privateKey,
         authMethod,
-        enableTmuxSession,
+        enableScreenSession,
       });
       socket.send(connectionData);
       document.getElementById("ssh-form").classList.add("is-hidden");
