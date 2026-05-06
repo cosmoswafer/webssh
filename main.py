@@ -36,7 +36,7 @@ async def index(request):
 
 @routes.get('/connect')
 async def connect(request):
-    print("Received a connection request")
+    print(f"New connection from {request.remote}")
     ws = web.WebSocketResponse()
     await ws.prepare(request)
 
@@ -47,7 +47,6 @@ async def connect(request):
             if msg.type == web.WSMsgType.TEXT:
                 try:
                     data = json.loads(msg.data)
-                    print(f"Received JSON data: {sanitize_data_for_logging(data)}")
 
                     if not ssh_client:
                         ssh_client = await handle_ssh_connection(ws, data)
@@ -59,15 +58,12 @@ async def connect(request):
                     else:
                         if isinstance(data, dict) and 'type' in data and data['type'] == 'resize':
                             cols, rows = data['cols'], data['rows']
-                            print(f"Received resize event: {cols}x{rows}")
                             await ssh_client.handle_resize(cols, rows)
                         else:
-                            print(f"Received JSON data with unknown type, sending the raw data to SSH server: {sanitize_data_for_logging(data)}")
                             await ssh_client.send_input(msg.data)
 
                 except json.JSONDecodeError:
-                    # Handle non-JSON messages
-                    print(f"Received non-JSON data: {sanitize_data_for_logging(msg.data)}")
+                    # Handle non-JSON messages (raw keystrokes forwarded directly)
                     if ssh_client:
                         try:
                             await ssh_client.send_input(msg.data)
@@ -75,11 +71,11 @@ async def connect(request):
                             print(f"Error sending input: {e}")
 
             elif msg.type == web.WSMsgType.ERROR:
-                print(f'WebSocket connection closed with exception {ws.exception()}')
+                print(f'WebSocket error from {request.remote}: {ws.exception()}')
     finally:
         if ssh_client:
             await ssh_client.close()
-        print('WebSocket connection closed')
+        print(f"Connection closed from {request.remote}")
 
     return ws
 
@@ -90,5 +86,4 @@ app.router.add_static('/static', './static')
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))
     print(f"Starting server on port {port}")
-    print("To run the server, use: uv run main.py")
     web.run_app(app, port=port)

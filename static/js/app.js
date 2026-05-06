@@ -95,7 +95,6 @@ const term = new Terminal({
 function switchSolarizedTheme(useDarkTheme = true) {
   const theme = useDarkTheme ? solarizedDarkTheme : solarizedLightTheme;
   term.options.theme = theme;
-  console.log(`Switched to solarized ${useDarkTheme ? 'dark' : 'light'} theme`);
 }
 
 // Make theme switching available globally for easy access
@@ -239,7 +238,6 @@ document.addEventListener("DOMContentLoaded", () => {
     socket = new WebSocket(`${protocol}${window.location.host}/connect`);
 
     socket.onopen = () => {
-      console.log("WebSocket connection established");
       const connectionData = JSON.stringify({
         host,
         port,
@@ -257,12 +255,10 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     socket.onmessage = (event) => {
-      console.log("Received message:", event.data);
       term.write(event.data);
     };
 
     socket.onclose = (event) => {
-      console.log("WebSocket connection closed:", event.code, event.reason);
       term.write("\r\nDisconnected from SSH server\r\n");
       document.getElementById("ssh-form").classList.remove("is-hidden");
       fitTerminal();
@@ -285,16 +281,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const cols = size.cols;
     const rows = size.rows;
 
-    // Debug messages
-    console.log(`Terminal resized to ${cols} cols and ${rows} rows`);
-
     // Send the new size to the server
     const resizeMessage = JSON.stringify({
       type: "resize",
       cols: cols,
       rows: rows,
     });
-    console.log(`Sending resize message: ${resizeMessage}`);
     socket.send(resizeMessage);
   });
 });
