@@ -1,8 +1,9 @@
 import asyncio
+import contextlib
 import sys
 import argparse
 import unittest
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 from aiohttp import web
 from ssh_client import SSHClient, SSHClientException
 from ssh_handler import handle_ssh_connection as handle_ws_ssh_connection, normalize_session_mode
@@ -103,7 +104,7 @@ class TestSSHClientSessionCommands(unittest.IsolatedAsyncioTestCase):
 
         await client.start_session("screen")
 
-        client.send_input.assert_awaited_once_with("screen -DR SCREENAUTO\n")
+        client.send_input.assert_awaited_once_with("screen -DR WEBSSH_AUTO\n")
 
     async def test_start_session_uses_tmux_command(self):
         client = SSHClient("test.example.com", 22, "testuser")
@@ -111,7 +112,7 @@ class TestSSHClientSessionCommands(unittest.IsolatedAsyncioTestCase):
 
         await client.start_session("tmux")
 
-        client.send_input.assert_awaited_once_with("tmux new-session -A -s SCREENAUTO\n")
+        client.send_input.assert_awaited_once_with("tmux new-session -A -s WEBSSH_AUTO\n")
 
     async def test_start_session_rejects_invalid_mode(self):
         client = SSHClient("test.example.com", 22, "testuser")
@@ -138,16 +139,24 @@ class TestSessionModeHandling(unittest.IsolatedAsyncioTestCase):
 
         mock_ssh_client = AsyncMock()
         mock_ssh_client.read_output.side_effect = [b"", asyncio.CancelledError()]
-        original_ssh_client = handle_ws_ssh_connection.__globals__["SSHClient"]
-        original_create_task = handle_ws_ssh_connection.__globals__["asyncio"].create_task
-        handle_ws_ssh_connection.__globals__["SSHClient"] = AsyncMock(return_value=mock_ssh_client)
-        handle_ws_ssh_connection.__globals__["asyncio"].create_task = lambda coro: coro.close()
+        create_task = asyncio.create_task
+        background_tasks = []
 
-        try:
+        def create_cancelled_task(coro):
+            task = create_task(coro)
+            task.cancel()
+            background_tasks.append(task)
+            return task
+
+        with patch("ssh_handler.SSHClient", return_value=mock_ssh_client), patch(
+            "ssh_handler.asyncio.create_task",
+            side_effect=create_cancelled_task,
+        ):
             result = await handle_ws_ssh_connection(ws, data)
-        finally:
-            handle_ws_ssh_connection.__globals__["SSHClient"] = original_ssh_client
-            handle_ws_ssh_connection.__globals__["asyncio"].create_task = original_create_task
+
+        for task in background_tasks:
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
 
         self.assertIs(result, mock_ssh_client)
         mock_ssh_client.connect.assert_awaited_once()
@@ -169,7 +178,6 @@ class TestSessionModeHandling(unittest.IsolatedAsyncioTestCase):
         self.assertIn("Unsupported session mode", response.text)
 
 if __name__ == "__main__": 
-    import sys
     if len(sys.argv) > 1 and sys.argv[1] == "--test-keys":
         test_private_key_loading()
     else:

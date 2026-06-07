@@ -23,9 +23,8 @@ async def handle_ssh_connection(ws, data):
     username = data['username']
     password = data.get('password')
     private_key = data.get('privateKey')
-    session_mode = normalize_session_mode(data)
-
     try:
+        session_mode = normalize_session_mode(data)
         ssh_client = SSHClient(host, port, username, password, private_key)
         await ssh_client.connect()
 

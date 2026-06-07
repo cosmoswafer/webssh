@@ -10,8 +10,8 @@ class SSHClientException(Exception):
 
 
 SESSION_COMMANDS = {
-    "screen": "screen -DR SCREENAUTO\n",
-    "tmux": "tmux new-session -A -s SCREENAUTO\n",
+    "screen": "screen -DR WEBSSH_AUTO\n",
+    "tmux": "tmux new-session -A -s WEBSSH_AUTO\n",
 }
 
 

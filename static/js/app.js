@@ -205,6 +205,8 @@ document.addEventListener("DOMContentLoaded", () => {
   );
   if (savedSessionModePreference === "true") {
     sessionModeSelect.value = "screen";
+  } else if (savedSessionModePreference === "false") {
+    sessionModeSelect.value = "none";
   } else if (
     savedSessionModePreference === "screen" ||
     savedSessionModePreference === "tmux"
