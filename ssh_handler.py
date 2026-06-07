@@ -1,6 +1,21 @@
 import asyncio
-from ssh_client import SSHClient, SSHClientException
 from aiohttp import web
+from ssh_client import SSHClient, SSHClientException
+
+VALID_SESSION_MODES = {'none', 'screen', 'tmux'}
+
+
+def normalize_session_mode(data):
+    session_mode = data.get('sessionMode')
+    if session_mode in VALID_SESSION_MODES:
+        return session_mode
+    if session_mode is not None:
+        raise SSHClientException(f"Unsupported session mode: {session_mode}")
+
+    if data.get('enableScreenSession'):
+        return 'screen'
+
+    return 'none'
 
 async def handle_ssh_connection(ws, data):
     host = data['host']
@@ -8,14 +23,14 @@ async def handle_ssh_connection(ws, data):
     username = data['username']
     password = data.get('password')
     private_key = data.get('privateKey')
-    enable_screen_session = data.get('enableScreenSession', False)
+    session_mode = normalize_session_mode(data)
 
     try:
         ssh_client = SSHClient(host, port, username, password, private_key)
         await ssh_client.connect()
 
-        if enable_screen_session:
-            await ssh_client.start_screen_session()
+        if session_mode != 'none':
+            await ssh_client.start_session(session_mode)
 
         async def send_output():
             while True:
