@@ -144,11 +144,15 @@
                 </div>
             </div>
             <div class="field mb-4">
+                <label class="label" for="session-mode">Session multiplexer</label>
                 <div class="control">
-                    <label class="checkbox">
-                        <input type="checkbox" id="enable-screen-session" />
-                        Enable screen session
-                    </label>
+                    <div class="select is-fullwidth">
+                        <select id="session-mode">
+                            <option value="none">None</option>
+                            <option value="screen">screen</option>
+                            <option value="tmux">tmux</option>
+                        </select>
+                    </div>
                 </div>
             </div>
             <div class="field">

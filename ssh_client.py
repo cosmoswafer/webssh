@@ -1,13 +1,19 @@
 import asyncio
-import json
-import paramiko
 import io
+import paramiko
 from cryptography.exceptions import UnsupportedAlgorithm
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 class SSHClientException(Exception):
     pass
+
+
+SESSION_COMMANDS = {
+    "screen": "screen -DR WEBSSH_AUTO\n",
+    "tmux": "tmux new-session -A -s WEBSSH_AUTO\n",
+}
+
 
 class SSHClient:
     def __init__(self, host, port, username, password=None, private_key=None):
@@ -118,9 +124,15 @@ class SSHClient:
             None, self.channel.send, data
         )
 
-    async def start_screen_session(self):
-        await self.send_input("screen -DR SCREENAUTO\n")
-        # tmux equivalent (backup): tmux new-session -A -s SCREENAUTO
+    async def start_session(self, session_mode):
+        try:
+            command = SESSION_COMMANDS[session_mode]
+        except KeyError as error:
+            raise SSHClientException(
+                f"Unsupported session mode: {session_mode}"
+            ) from error
+
+        await self.send_input(command)
 
     async def handle_resize(self, cols, rows):
         await asyncio.get_event_loop().run_in_executor(

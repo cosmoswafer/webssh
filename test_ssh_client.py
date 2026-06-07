@@ -1,7 +1,12 @@
 import asyncio
-from ssh_client import SSHClient, SSHClientException
+import contextlib
 import sys
 import argparse
+import unittest
+from unittest.mock import AsyncMock, patch
+from aiohttp import web
+from ssh_client import SSHClient, SSHClientException
+from ssh_handler import handle_ssh_connection as handle_ws_ssh_connection, normalize_session_mode
 
 async def handle_ssh_connection(host, port, username, password):
     try:
@@ -91,8 +96,88 @@ def test_private_key_loading():
     except Exception as e:
         print(f"✗ Invalid key test failed with unexpected error: {e}")
 
+
+class TestSSHClientSessionCommands(unittest.IsolatedAsyncioTestCase):
+    async def test_start_session_uses_screen_command(self):
+        client = SSHClient("test.example.com", 22, "testuser")
+        client.send_input = AsyncMock()
+
+        await client.start_session("screen")
+
+        client.send_input.assert_awaited_once_with("screen -DR WEBSSH_AUTO\n")
+
+    async def test_start_session_uses_tmux_command(self):
+        client = SSHClient("test.example.com", 22, "testuser")
+        client.send_input = AsyncMock()
+
+        await client.start_session("tmux")
+
+        client.send_input.assert_awaited_once_with("tmux new-session -A -s WEBSSH_AUTO\n")
+
+    async def test_start_session_rejects_invalid_mode(self):
+        client = SSHClient("test.example.com", 22, "testuser")
+
+        with self.assertRaises(SSHClientException):
+            await client.start_session("invalid")
+
+
+class TestSessionModeHandling(unittest.IsolatedAsyncioTestCase):
+    def test_normalize_session_mode_supports_new_and_legacy_values(self):
+        self.assertEqual(normalize_session_mode({"sessionMode": "screen"}), "screen")
+        self.assertEqual(normalize_session_mode({"sessionMode": "tmux"}), "tmux")
+        self.assertEqual(normalize_session_mode({"enableScreenSession": True}), "screen")
+        self.assertEqual(normalize_session_mode({}), "none")
+
+    async def test_handle_connection_starts_requested_session(self):
+        ws = AsyncMock()
+        data = {
+            "host": "example.com",
+            "port": 22,
+            "username": "demo",
+            "sessionMode": "tmux",
+        }
+
+        mock_ssh_client = AsyncMock()
+        mock_ssh_client.read_output.side_effect = [b"", asyncio.CancelledError()]
+        create_task = asyncio.create_task
+        background_tasks = []
+
+        def create_cancelled_task(coro):
+            task = create_task(coro)
+            task.cancel()
+            background_tasks.append(task)
+            return task
+
+        with patch("ssh_handler.SSHClient", return_value=mock_ssh_client), patch(
+            "ssh_handler.asyncio.create_task",
+            side_effect=create_cancelled_task,
+        ):
+            result = await handle_ws_ssh_connection(ws, data)
+
+        for task in background_tasks:
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
+
+        self.assertIs(result, mock_ssh_client)
+        mock_ssh_client.connect.assert_awaited_once()
+        mock_ssh_client.start_session.assert_awaited_once_with("tmux")
+
+    async def test_handle_connection_returns_error_for_invalid_session_mode(self):
+        ws = AsyncMock()
+        data = {
+            "host": "example.com",
+            "port": 22,
+            "username": "demo",
+            "sessionMode": "invalid",
+        }
+
+        response = await handle_ws_ssh_connection(ws, data)
+
+        self.assertIsInstance(response, web.Response)
+        self.assertEqual(response.status, 400)
+        self.assertIn("Unsupported session mode", response.text)
+
 if __name__ == "__main__": 
-    import sys
     if len(sys.argv) > 1 and sys.argv[1] == "--test-keys":
         test_private_key_loading()
     else:
