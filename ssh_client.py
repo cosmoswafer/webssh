@@ -125,22 +125,36 @@ class SSHClient:
         )
 
     async def wait_for_shell_ready(self, timeout=10.0):
-        """Wait until the shell produces output, indicating it's ready for commands.
+        """Wait until the shell produces output and then settles, indicating it's ready for commands.
 
         This replicates the behavior of ssh -t, where commands are only sent after
         the remote shell has produced its initial output (e.g., banner messages from
-        gateways like warpgate).
+        gateways like warpgate) and settled at the prompt.
+
+        The function drains incoming data while waiting so that it can detect when
+        output stops flowing. A brief quiet period after the last received byte
+        indicates the shell is at its prompt and ready for input.
 
         Args:
-            timeout (float): Maximum number of seconds to wait for shell output
-                before proceeding anyway. Defaults to 10.0 seconds.
+            timeout (float): Maximum number of seconds to wait before proceeding
+                anyway. Defaults to 10.0 seconds.
         """
         loop = asyncio.get_event_loop()
         deadline = loop.time() + timeout
+        quiet_period = 0.3
+        last_recv_time = None
+
         while loop.time() < deadline:
             if self.channel.recv_ready():
+                self.channel.recv(4096)
+                # Data is intentionally discarded here: the initial shell output
+                # (banners, MOTD, prompt) is drained so we can detect when it stops
+                # flowing. The send_output task has not started yet, so this data
+                # would not reach the browser regardless.
+                last_recv_time = loop.time()
+            elif last_recv_time is not None and loop.time() - last_recv_time >= quiet_period:
                 return
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(0.05)
 
     async def start_session(self, session_mode):
         try:

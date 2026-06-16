@@ -126,26 +126,60 @@ class TestSSHClientSessionCommands(unittest.IsolatedAsyncioTestCase):
 
 
 class TestWaitForShellReady(unittest.IsolatedAsyncioTestCase):
-    async def test_returns_immediately_when_data_available(self):
+    async def test_returns_after_quiet_period_following_data(self):
+        """Returns after a quiet period following initial shell output, not immediately on first byte."""
         client = SSHClient("test.example.com", 22, "testuser")
         mock_channel = MagicMock()
-        mock_channel.recv_ready.return_value = True
+        # Data available on first poll, then quiet
+        mock_channel.recv_ready.side_effect = [True, False, False, False]
+        mock_channel.recv.return_value = b"$ "
         client.channel = mock_channel
 
-        await client.wait_for_shell_ready()
+        mock_loop = MagicMock()
+        # loop.time() is called in this order:
+        #   (1) initial call to set the deadline (0.0 + 10.0 = deadline 10.0)
+        #   iteration 1: (2) while-condition check, recv_ready=True so
+        #                (3) capture last_recv_time after reading data
+        #   iteration 2: (4) while-condition check, recv_ready=False so
+        #                (5) quiet-period check: 0.05 - 0.0 = 0.05 s < 0.3 s, keep waiting
+        #   iteration 3: (6) while-condition check, recv_ready=False so
+        #                (7) quiet-period check: 0.40 - 0.0 = 0.40 s >= 0.3 s -> return
+        mock_loop.time.side_effect = [0.0, 0.0, 0.0, 0.05, 0.05, 0.40, 0.40]
 
-        mock_channel.recv_ready.assert_called()
+        with patch("ssh_client.asyncio.get_event_loop", return_value=mock_loop), \
+             patch("ssh_client.asyncio.sleep", new_callable=AsyncMock):
+            await client.wait_for_shell_ready(timeout=10.0)
+
+        mock_channel.recv.assert_called_once_with(4096)
 
     async def test_waits_until_data_becomes_available(self):
+        """Does not return before any shell output has been seen."""
         client = SSHClient("test.example.com", 22, "testuser")
         mock_channel = MagicMock()
-        # Not ready on first poll, ready on second
-        mock_channel.recv_ready.side_effect = [False, True]
+        # Not ready on first poll, ready on second, then quiet
+        mock_channel.recv_ready.side_effect = [False, True, False, False]
+        mock_channel.recv.return_value = b"$ "
         client.channel = mock_channel
 
-        await client.wait_for_shell_ready()
+        mock_loop = MagicMock()
+        # loop.time() is called in this order:
+        #   (1) initial call to set the deadline (0.0 + 10.0 = deadline 10.0)
+        #   iteration 1: (2) while-condition check, recv_ready=False and
+        #                last_recv_time is None so elif is skipped
+        #   iteration 2: (3) while-condition check, recv_ready=True so
+        #                (4) capture last_recv_time after reading data
+        #   iteration 3: (5) while-condition check, recv_ready=False so
+        #                (6) quiet-period check: 0.10 - 0.05 = 0.05 s < 0.3 s, keep waiting
+        #   iteration 4: (7) while-condition check, recv_ready=False so
+        #                (8) quiet-period check: 0.40 - 0.05 = 0.35 s >= 0.3 s -> return
+        mock_loop.time.side_effect = [0.0, 0.0, 0.05, 0.05, 0.10, 0.10, 0.40, 0.40]
 
-        self.assertEqual(mock_channel.recv_ready.call_count, 2)
+        with patch("ssh_client.asyncio.get_event_loop", return_value=mock_loop), \
+             patch("ssh_client.asyncio.sleep", new_callable=AsyncMock):
+            await client.wait_for_shell_ready(timeout=10.0)
+
+        self.assertEqual(mock_channel.recv_ready.call_count, 4)
+        mock_channel.recv.assert_called_once_with(4096)
 
     async def test_returns_after_timeout_when_no_data(self):
         client = SSHClient("test.example.com", 22, "testuser")
