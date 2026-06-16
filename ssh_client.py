@@ -124,6 +124,24 @@ class SSHClient:
             None, self.channel.send, data
         )
 
+    async def wait_for_shell_ready(self, timeout=10.0):
+        """Wait until the shell produces output, indicating it's ready for commands.
+
+        This replicates the behavior of ssh -t, where commands are only sent after
+        the remote shell has produced its initial output (e.g., banner messages from
+        gateways like warpgate).
+
+        Args:
+            timeout (float): Maximum number of seconds to wait for shell output
+                before proceeding anyway. Defaults to 10.0 seconds.
+        """
+        loop = asyncio.get_event_loop()
+        deadline = loop.time() + timeout
+        while loop.time() < deadline:
+            if self.channel.recv_ready():
+                return
+            await asyncio.sleep(0.1)
+
     async def start_session(self, session_mode):
         try:
             command = SESSION_COMMANDS[session_mode]
@@ -132,6 +150,7 @@ class SSHClient:
                 f"Unsupported session mode: {session_mode}"
             ) from error
 
+        await self.wait_for_shell_ready()
         await self.send_input(command)
 
     async def handle_resize(self, cols, rows):

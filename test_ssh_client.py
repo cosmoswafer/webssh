@@ -3,7 +3,7 @@ import contextlib
 import sys
 import argparse
 import unittest
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 from aiohttp import web
 from ssh_client import SSHClient, SSHClientException
 from ssh_handler import handle_ssh_connection as handle_ws_ssh_connection, normalize_session_mode
@@ -101,17 +101,21 @@ class TestSSHClientSessionCommands(unittest.IsolatedAsyncioTestCase):
     async def test_start_session_uses_screen_command(self):
         client = SSHClient("test.example.com", 22, "testuser")
         client.send_input = AsyncMock()
+        client.wait_for_shell_ready = AsyncMock()
 
         await client.start_session("screen")
 
+        client.wait_for_shell_ready.assert_awaited_once()
         client.send_input.assert_awaited_once_with("screen -DR WEBSSH_AUTO\n")
 
     async def test_start_session_uses_tmux_command(self):
         client = SSHClient("test.example.com", 22, "testuser")
         client.send_input = AsyncMock()
+        client.wait_for_shell_ready = AsyncMock()
 
         await client.start_session("tmux")
 
+        client.wait_for_shell_ready.assert_awaited_once()
         client.send_input.assert_awaited_once_with("tmux new-session -A -s WEBSSH_AUTO\n")
 
     async def test_start_session_rejects_invalid_mode(self):
@@ -119,6 +123,47 @@ class TestSSHClientSessionCommands(unittest.IsolatedAsyncioTestCase):
 
         with self.assertRaises(SSHClientException):
             await client.start_session("invalid")
+
+
+class TestWaitForShellReady(unittest.IsolatedAsyncioTestCase):
+    async def test_returns_immediately_when_data_available(self):
+        client = SSHClient("test.example.com", 22, "testuser")
+        mock_channel = MagicMock()
+        mock_channel.recv_ready.return_value = True
+        client.channel = mock_channel
+
+        await client.wait_for_shell_ready()
+
+        mock_channel.recv_ready.assert_called()
+
+    async def test_waits_until_data_becomes_available(self):
+        client = SSHClient("test.example.com", 22, "testuser")
+        mock_channel = MagicMock()
+        # Not ready on first poll, ready on second
+        mock_channel.recv_ready.side_effect = [False, True]
+        client.channel = mock_channel
+
+        await client.wait_for_shell_ready()
+
+        self.assertEqual(mock_channel.recv_ready.call_count, 2)
+
+    async def test_returns_after_timeout_when_no_data(self):
+        client = SSHClient("test.example.com", 22, "testuser")
+        mock_channel = MagicMock()
+        mock_channel.recv_ready.return_value = False
+        client.channel = mock_channel
+
+        # Control loop.time() so the deadline is exceeded after one poll cycle,
+        # and patch asyncio.sleep to avoid real delays.
+        mock_loop = MagicMock()
+        # Calls: [deadline calculation, first while condition, second while condition]
+        mock_loop.time.side_effect = [0.0, 0.0, 11.0]
+
+        with patch("ssh_client.asyncio.get_event_loop", return_value=mock_loop), \
+             patch("ssh_client.asyncio.sleep", new_callable=AsyncMock):
+            await client.wait_for_shell_ready(timeout=10.0)
+
+        self.assertEqual(mock_channel.recv_ready.call_count, 1)
 
 
 class TestSessionModeHandling(unittest.IsolatedAsyncioTestCase):
