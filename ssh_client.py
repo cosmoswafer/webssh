@@ -140,7 +140,7 @@ class SSHClient:
         while loop.time() < deadline:
             if self.channel.recv_ready():
                 return
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.5)
 
     async def start_session(self, session_mode):
         try:
