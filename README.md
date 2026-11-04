@@ -1,105 +1,78 @@
 # Web-Based SSH Terminal
 
-A secure web interface for SSH connections using Python and WebSockets.
+A web interface for interactive SSH sessions, built with Rust, Axum, WebSockets, and Xterm.js.
 
-## Features
+## Quick start
 
-- Web-based terminal interface (Xterm.js integration)
-- Solarized color theme support (dark and light variants)
-- Secure SSH credential handling
-- Real-time terminal synchronization
-- Automatic resize propagation
-- Query parameter pre-configuration
-- Async Python backend using Paramiko
+Requirements: stable Rust and a C build toolchain. OpenSSL and libssh2 are built from vendored sources by Cargo.
 
-## Quick Start
-
-1. Install requirements:
-```bash
-pip install -r requirements.txt
+```sh
+cargo run --release
 ```
 
-2. Start server:
-```bash
-python main.py
+Open `http://localhost:8080`, or prefill the connection form:
+
+```text
+http://localhost:8080?host=your_server&port=22&username=your_user
 ```
 
-3. Connect via:
-`http://localhost:8080?host=your_server&port=22&username=your_user`
+Set `PORT` to change the listen port:
 
-## Terminal Themes
-
-The terminal features Solarized color theme support with multiple theme selection options.
-
-### Theme Selection Priority
-1. **Query Parameter**: `?theme=light`, `?theme=dark`, or `?theme=auto` (overrides default)
-2. **Default**: Solarized dark theme (when no theme parameter is specified)
-
-### Usage Examples
-
-**URL with theme parameter:**
-```
-http://localhost:8080?host=server&username=user&theme=light
-http://localhost:8080?host=server&username=user&theme=dark
-http://localhost:8080?host=server&username=user&theme=auto
+```sh
+PORT=9000 cargo run --release
 ```
 
-**Manual theme switching via browser console:**
-```javascript
-// Switch to solarized dark theme
-switchSolarizedTheme(true)
+Run from the repository root: the server reads `index.html` and `static/` from the current working directory. `.env` files are not loaded automatically.
 
-// Switch to solarized light theme  
-switchSolarizedTheme(false)
+## Connections
+
+- Password authentication.
+- Private-key authentication with an optional passphrase.
+- SSH-agent and default `~/.ssh` key fallback when password authentication is absent or unsuccessful.
+- Optional `screen` or `tmux` session attachment.
+- Raw terminal input, UTF-8-lossy terminal output, and terminal resize forwarding.
+
+The frontend sends its initial WebSocket message as JSON to `/connect`. Later text frames contain raw terminal input or resize messages such as:
+
+```json
+{"type":"resize","cols":80,"rows":24}
 ```
 
-**Theme Options:**
-- `?theme=light` - Force solarized light theme
-- `?theme=dark` - Force solarized dark theme  
-- `?theme=auto` - Auto-detect browser's `prefers-color-scheme` setting
-- No parameter - Default to solarized dark theme
+Session modes are `none`, `screen`, and `tmux`. The legacy `enableScreenSession` connection field remains supported.
 
-## Configuration
+## Frontend
 
-### Environment Variables
-Set in `.env` or OS environment:
+`index.html` and `static/js/app.js` are served without a frontend build step. Xterm.js and Bulma load from CDNs, so a fully functional browser session needs access to those CDNs.
 
-- `PORT` (default: 8080) - Web server port
-
-### Runtime Options
-URL parameters:
-- `host` - SSH server hostname (required)
-- `port` - SSH port (default: 22)
-- `username` - SSH username (required)
-- `theme` - Terminal color theme: `light`, `dark`, or `auto` (optional, defaults to dark theme)
-
-## Security Notes
-
-- Passwords are transmitted over WebSocket (ensure HTTPS in production)
-- Private keys must be pasted manually in the web interface
-- Session credentials are never persisted
-- Uses Paramiko's strict security policies
-
-## API Endpoints
-
-- `/` - Main interface (index.html)
-- `/connect` - WebSocket endpoint for SSH tunneling
-- `/static` - Static assets (JS/CSS)
+Themes can be selected with `?theme=light`, `?theme=dark`, or `?theme=auto`; the default is Solarized dark.
 
 ## Development
 
-```bash
-# Run tests
-pytest test_ssh_client.py
+```sh
+cargo test                         # all tests
+cargo test <test_name>             # tests matching one name
+cargo test --test <target>          # one integration-test target
 
-# Test CLI client directly
-python test_ssh_client.py example.com 22 username
+cargo fmt --check
+cargo clippy --all-targets --all-features -- -D warnings
+cargo test
 ```
 
-Follow conventions from [CONVENTIONS.md](CONVENTIONS.md):
-- Type-hinted Python code
-- Async/await for I/O operations
-- WebSocket messages use JSON format:
-  ```json
-  {"type": "resize", "cols": 80, "rows": 24}
-  ```
+Unit tests cover protocol compatibility, validation, configuration, shell-readiness behavior, and static-file routes. End-to-end SSH verification requires a real SSH server; `screen` or `tmux` must be installed remotely when selected.
+
+## Architecture
+
+- `src/main.rs` — configuration, listener, and server startup.
+- `src/protocol.rs` — validated connection and terminal-message types.
+- `src/server.rs` — static routes and Axum WebSocket relay.
+- `src/ssh.rs` — authentication and the blocking SSH worker.
+- `src/port.rs` / `src/config.rs` — validated ports and `PORT` configuration.
+
+Each SSH connection runs on a dedicated OS thread because `ssh2` is synchronous. Bounded Tokio channels connect that worker to the async Axum relay; SSH calls never run directly on an async executor thread.
+
+## Security notes
+
+- Use HTTPS/WSS through a TLS-enabled reverse proxy in production; the Axum server itself listens over HTTP.
+- SSH host keys are not currently verified. Do not treat connections as protected against man-in-the-middle attacks until known-host verification is configured.
+- Passwords and private keys are sent over the WebSocket. Private keys and session-mode preferences are persisted in browser localStorage; passwords are not.
+- Agent/default-key fallback can use the server process's SSH identities. Restrict access to the web endpoint appropriately.
